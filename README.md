@@ -1,9 +1,9 @@
 # Projet-ReseauIoT-KnX
 
-0/1/1 --> Leds on/off
-    .
-    .
-    .
+0/1/1 --> Leds on/off\r\n
+    .\r\n
+    .\r\n
+    .\r\n
 0/1/4
 
 
