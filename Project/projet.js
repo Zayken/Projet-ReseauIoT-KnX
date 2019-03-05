@@ -1,5 +1,10 @@
 var knx = require('knx');
-let i=4;
+
+let button1State=0;
+let button2State=0;
+let button3State=0;
+let button4State=0;
+
 var connection = knx.Connection({
   ipAddr: '192.168.0.6',
   ipPort: 3671,
@@ -21,7 +26,6 @@ var connection = knx.Connection({
   handlers: {
     connected: function() {
       console.log('Connected!');
-      
       setTimeout(function(){
         connection.write("0/1/1", 1);
         connection.write("0/1/2", 1);
@@ -41,17 +45,19 @@ var connection = knx.Connection({
       //new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''),
       //evt, src, dest, value);
       switch(dest){
-        case '0/3/1':
-          //console.log(dest);
-          //setTimeout(function(){
-          //  let x=chenillardOn(i);
-          //},500);
+        case '0/3/1': //start/stop chenillard
+          switch(button1State){
+            case 0:
+              
+            break;
+            case 1:
+              
+            break;
+          }
         break;
-        case '0/3/2':
-          // console.log(dest);
-          // setTimeout(function(){
-          //   chenillardOff(x);
-          // },500);
+
+        case '0/3/2':   //change chennilard order
+          
         break;
         case '0/3/3':
 
@@ -75,26 +81,96 @@ var connection = knx.Connection({
   process.exit();
 });**/
 
+let array1=['1','2','3','4'];
+let array2=['4','3','2','1'];
+let array3=['1','3','2','4'];
+let array4='random';
+
+let currentLight='4';
+
+/*let chenillard;
+setTimeout(function(){
+  chenillard=chenillardOn(array1);
+  setTimeout(function(){
+    chenillardOff(chenillard);
+    console.log('ms=500');
+    ms=500;
+    chenillard=chenillardOn(array1);
+      setTimeout(function(){
+        console.log('fini');
+        chenillardOff(chenillard);
+      },3000);
+  },7000);
+},1000);*/
 
 
-function chenillardOn(i){
-    console.log('start');
+
+function chenillardOn(arrayOrder,ms){
+  if(arrayOrder=='random'){
+    return randomChenillardOn(ms);
+  }
+  else{
+    let i=arrayOrder.indexOf(currentLight);
     let chenillard=setInterval(function(){
-      i=i%5;
-      if(i==0){i++;}
-      console.log(i);
-      if(i==4){
-        connection.write("0/1/4", 0);
-        connection.write("0/1/1", 1);
-      }else{
-        connection.write("0/1/"+String(i), 0);
-        connection.write("0/1/"+String(i+1), 1);
-      }
-      i++;      
-    },1000);
+      if (i==4){i=0;}
+      console.log('connection.write("0/1/"'+arrayOrder[i]+', 0)');
+      console.log('connection.write("0/1/"'+arrayOrder[(i+1)%4]+', 1)');
+      currentLight=String(arrayOrder[(i+1)%4]);
+      i++;  
+    },ms);
     return chenillard;
+  }
+}
+
+function randomChenillardOn(ms){
+  let arrayOrder=['1','2','3','4'];
+  let i;
+    let chenillard=setInterval(function(){
+      i=arrayOrder.indexOf(currentLight);
+      console.log('connection.write("0/1/"'+arrayOrder[i]+', 0)');
+      arrayOrder.splice(i,1);
+      next=getRandomInt(3);
+      console.log('connection.write("0/1/"'+arrayOrder[next]+', 1)');
+      arrayOrder.push(currentLight);
+      currentLight=arrayOrder[next];
+    },ms);
+    return chenillard;
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+
+function checkMs(ms){
+  if(ms>1750){
+    return 1750;
+  }
+  else if(ms<250){
+    return 250;
+  }
+  else{
+    return ms;
+  }
 }
 
 function chenillardOff(chenillard){
   clearInterval(chenillard);
+}
+
+class Chenillard {
+  constructor(arrayOrder,ms){
+    this.arrayOrder=arrayOrder;
+    this.ms=ms;
+  }
+
+  start(){
+    this.chenillard=chenillardOn(this.arrayOrder);
+  }
+  stop(){
+    chenillardOff(this.chenillard);
+  }
+
+  load(){
+    
+  }
 }
