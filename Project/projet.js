@@ -103,7 +103,7 @@ function chenillardOff(chenillard){
 }
 
 let button1State=0;
-let button2State=1;
+let button2State=0;
 
 let array1=['1','2','3','4'];
 let array2=['4','3','2','1'];
@@ -113,7 +113,7 @@ let array4='random';
 let currentLight='4';
 
 var connection = knx.Connection({
-  ipAddr: '192.168.0.6',
+  ipAddr: '192.168.0.5',
   ipPort: 3671,
   //interface: 'eth0',
   //physAddr: '1.1',
@@ -172,15 +172,15 @@ var connection = knx.Connection({
           switch(button2State){
             case 0:
               chenillard.loadOrder(array2);
-              button1State=1;
+              button2State=1;
             break;
             case 1:
               chenillard.loadOrder(array3);
-              button1State=2;
+              button2State=2;
             break;
             case 2:
               chenillard.loadOrder(array1);
-              button1State=0;
+              button2State=0;
             break;
           }
         break;
