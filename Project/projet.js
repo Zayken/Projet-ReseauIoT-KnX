@@ -58,8 +58,8 @@ function chenillardOn(arrayOrder,ms){
     let i=arrayOrder.indexOf(currentLight);
     let chenillard=setInterval(function(){
       if (i==4){i=0;}
-      console.log('connection.write("0/1/"'+arrayOrder[i]+', 0)');
-      console.log('connection.write("0/1/"'+arrayOrder[(i+1)%4]+', 1)');
+      connection.write("0/1/"+arrayOrder[i], 0);
+      connection.write("0/1/"+arrayOrder[(i+1)%4], 1);
       currentLight=String(arrayOrder[(i+1)%4]);
       i++;  
     },ms);
@@ -72,10 +72,10 @@ function randomChenillardOn(ms){
   let i;
     let chenillard=setInterval(function(){
       i=arrayOrder.indexOf(currentLight);
-      console.log('connection.write("0/1/"'+arrayOrder[i]+', 0)');
+      connection.write("0/1/"+arrayOrder[i], 0);
       arrayOrder.splice(i,1);
       next=getRandomInt(3);
-      console.log('connection.write("0/1/"'+arrayOrder[next]+', 1)');
+      connection.write("0/1/"+arrayOrder[next], 1);
       arrayOrder.push(currentLight);
       currentLight=arrayOrder[next];
     },ms);
@@ -87,11 +87,11 @@ function getRandomInt(max) {
 }
 
 function checkMs(ms){
-  if(ms>1750){
-    return 1750;
+  if(ms>2500){
+    return 2500;
   }
-  else if(ms<250){
-    return 250;
+  else if(ms<500){
+    return 500;
   }
   else{
     return ms;
@@ -104,8 +104,6 @@ function chenillardOff(chenillard){
 
 let button1State=0;
 let button2State=1;
-let button3State=0;
-let button4State=0;
 
 let array1=['1','2','3','4'];
 let array2=['4','3','2','1'];
@@ -114,7 +112,7 @@ let array4='random';
 
 let currentLight='4';
 
-/*var connection = knx.Connection({
+var connection = knx.Connection({
   ipAddr: '192.168.0.6',
   ipPort: 3671,
   //interface: 'eth0',
@@ -146,7 +144,7 @@ let currentLight='4';
           connection.write("0/1/3", 0);
           connection.write("0/1/4", 0);
           setTimeout(function(){
-            chenillard=new Chenillard(array1,1000);
+            chenillard=new Chenillard(array1,1500);
           },500);
         },1000);
       },1500);
@@ -160,11 +158,11 @@ let currentLight='4';
         case '0/3/1': //start/stop chenillard
           switch(button1State){
             case 0:
-              chenillard.start;
+              chenillard.start();
               button1State=1;
             break;
             case 1:
-              chenillard.stop;
+              chenillard.stop();
               button1State=0;
             break;
           }
@@ -187,10 +185,10 @@ let currentLight='4';
           }
         break;
         case '0/3/3':     //increase speed
-          chenillard.increaseMs(150);
+          chenillard.increaseMs(250);
         break;
         case '0/3/4':     //decrease speed
-          chenillard.decreaseMs(150);
+          chenillard.decreaseMs(250);
         break;
       }
     },
@@ -199,7 +197,7 @@ let currentLight='4';
       console.log("**** ERROR: %j", connstatus);
     }
   }
-});*/
+});
 
 // Handling Ctrl-C cleanly in Node.js
 /**process.on('SIGINT', function() {
@@ -208,7 +206,7 @@ let currentLight='4';
   process.exit();
 });**/
 
-let chenillard=new Chenillard(array1,1000);
+/*let chenillard=new Chenillard(array1,1000);
 chenillard.start();
   setTimeout(function(){
     console.log('speedDecreased');
@@ -220,4 +218,4 @@ chenillard.start();
       setTimeout(function(){
       },3000);
     },3000);
-},3000);
+},3000);*/
