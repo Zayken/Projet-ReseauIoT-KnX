@@ -11,46 +11,45 @@ class Chenillard {
     console.log('Start');
     this.chenillard=chenillardOn(this.arrayOrder,this.ms);
   }
+
   stop(){
     console.log('Stop');
     chenillardOff(this.chenillard);
   }
 
-  getMs(){return this.ms}
-
   loadMs(ms){
-    this.ms=checkMs(ms);
     chenillardOff(this.chenillard);
+    this.ms=checkMs(ms);
     this.chenillard=chenillardOn(this.arrayOrder,this.ms);
   }
 
   increaseMs(ms){
-    this.ms=checkMs(this.ms+ms);
     chenillardOff(this.chenillard);
+    this.ms=checkMs(this.ms+ms);
     this.chenillard=chenillardOn(this.arrayOrder,this.ms);
   }
 
   decreaseMs(ms){
-    this.ms=checkMs(this.ms-ms);
     chenillardOff(this.chenillard);
+    this.ms=checkMs(this.ms-ms);
     this.chenillard=chenillardOn(this.arrayOrder,this.ms);
   }
 
   loadOrder(arrayOrder){
-    this.arrayOrder=arrayOrder;
     chenillardOff(this.chenillard);
+    this.arrayOrder=arrayOrder;
     this.chenillard=chenillardOn(this.arrayOrder,this.ms);
   }
 
   loadBoth(arrayOrder,ms){
+    chenillardOff(this.chenillard);
     this.ms=checkMs(ms);
     this.arrayOrder=arrayOrder;
-    chenillardOff(this.chenillard);
     this.chenillard=chenillardOn(this.arrayOrder,this.ms);
   }
 }
 
-function chenillardOn(arrayOrder,ms){
+/*function chenillardOn(arrayOrder,ms){
   if(arrayOrder=='random'){
     return randomChenillardOn(ms);
   }
@@ -58,6 +57,8 @@ function chenillardOn(arrayOrder,ms){
     let i=arrayOrder.indexOf(currentLight);
     let chenillard=setInterval(function(){
       if (i==4){i=0;}
+      console.log(arrayOrder[i]);
+      console.log(arrayOrder[(i+1)%4]);
       connection.write("0/1/"+arrayOrder[i], 0);
       connection.write("0/1/"+arrayOrder[(i+1)%4], 1);
       currentLight=String(arrayOrder[(i+1)%4]);
@@ -65,9 +66,9 @@ function chenillardOn(arrayOrder,ms){
     },ms);
     return chenillard;
   }
-}
+}*/
 
-function randomChenillardOn(ms){
+/*function randomChenillardOn(ms){
   let arrayOrder=['1','2','3','4'];
   let i;
     let chenillard=setInterval(function(){
@@ -76,6 +77,56 @@ function randomChenillardOn(ms){
       arrayOrder.splice(i,1);
       next=getRandomInt(3);
       connection.write("0/1/"+arrayOrder[next], 1);
+      arrayOrder.push(currentLight);
+      currentLight=arrayOrder[next];
+    },ms);
+    return chenillard;
+}*/
+
+function chenillardOn(arrayOrder,ms){
+  if(arrayOrder.includes('random')){
+    return randomChenillardOn(arrayOrder.replace( /^\D+/g, ''),ms);
+  }
+  else{
+    if(currentLight==undefined){currentLight=arrayOrder[arrayOrder.length-1];}
+    let i=arrayOrder.indexOf(currentLight);
+    let chenillard=setInterval(function(){
+      if (i==arrayOrder.length){i=0;}
+      console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i));
+      console.log('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4),convert(arrayOrder,(i+1)%arrayOrder.length));
+      //eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0);
+      //eval('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4)).write("0/1/"+convert(arrayOrder,(i+1)%arrayOrder.length),1);
+      currentLight=String(convert(arrayOrder,(i+1)%arrayOrder.length));
+      i++;  
+    },ms);
+    return chenillard;
+  }
+}
+
+function convert(array,index){
+  if(Number(array[index])%4==0){
+    return String(4);
+  }
+  else{ 
+    return String(Number(array[index])%4);
+  }
+}
+
+function randomChenillardOn(size,ms){
+  let arrayOrder=[];
+  let i=0;
+  while(i<size){
+    arrayOrder.push(String(i+1));
+    i++;
+  }
+    let chenillard=setInterval(function(){
+      i=arrayOrder.indexOf(currentLight);
+      console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i),arrayOrder[i]);
+     // eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0);
+      arrayOrder.splice(i,1);
+      next=getRandomInt(arrayOrder.length-1);
+      console.log('connection'+Math.trunc((Number(arrayOrder[next])-1)/4),convert(arrayOrder,next),arrayOrder[next]);
+     // eval('connection'+Math.trunc((Number(arrayOrder[next])-1)/4)).write("0/1/"+convert(arrayOrder,next),1);
       arrayOrder.push(currentLight);
       currentLight=arrayOrder[next];
     },ms);
@@ -102,120 +153,643 @@ function chenillardOff(chenillard){
   clearInterval(chenillard);
 }
 
+class Motif{
+
+  //ArrayMotif like [0,0,1,1]
+
+  constructor(arrayMotif){
+    this.arrayMotif=arrayMotif;
+  }
+
+  activeMotif(){
+    let i=0;
+    this.arrayMotif.forEach(function(e) {
+      i++;
+      connection.write("0/1/"+i, e);
+    })
+  }
+
+  setMotif(arrayMotif){
+    this.arrayMotif=arrayMotif;
+    this.activeMotif();
+  }
+}
+
+class MotifChenillard{
+
+  constructor(arrayOrder,ms){
+    this.arrayOrder=arrayOrder;
+    this.ms=ms;
+  }
+
+  start(){
+    console.log('Start');
+    this.chenillard=chenillardMotifOn(this.arrayOrder,this.ms);
+  }
+
+  stop(){
+    console.log('Stop');
+    chenillardMotifOff(this.chenillard);
+  }
+
+  loadMs(ms){
+    chenillardMotifOff(this.chenillard);
+    this.ms=checkMs(ms);
+    this.chenillard=chenillardMotifOn(this.arrayOrder,this.ms);
+  }
+
+  increaseMs(ms){
+    chenillardMotifOff(this.chenillard);
+    this.ms=checkMs(this.ms+ms);
+    this.chenillard=chenillardMotifOn(this.arrayOrder,this.ms);
+  }
+
+  decreaseMs(ms){
+    chenillardMotifOff(this.chenillard);
+    this.ms=checkMs(this.ms-ms);
+    this.chenillard=chenillardMotifOn(this.arrayOrder,this.ms);
+  }
+
+  loadOrder(arrayOrder){
+    chenillardMotifOff(this.chenillard);
+    this.arrayOrder=arrayOrder;
+    this.chenillard=chenillardMotifOn(this.arrayOrder,this.ms);
+  }
+
+  loadBoth(arrayOrder,ms){
+    chenillardMotifOff(this.chenillard);
+    this.ms=checkMs(ms);
+    this.arrayOrder=arrayOrder;
+    this.chenillard=chenillardMotifOn(this.arrayOrder,this.ms);
+  }
+
+}
+
+function chenillardMotifOn(arrayOrder,ms){
+    let i=arrayOrder.indexOf(currentMotif);
+    let chenillard=setInterval(function(){
+      if (i==arrayOrder.length){i=0;}
+      arrayOrder[i].activeMotif();
+      currentMotif=arrayOrder[i];
+      i++;  
+    },ms);
+    return chenillard;
+}
+
+function chenillardMotifOff(chenillard){
+  clearInterval(chenillard);
+}
+
 let button1State=0;
 let button2State=0;
+let button1StateMotif=0;
 
-let array1=['1','2','3','4'];
-let array2=['4','3','2','1'];
-let array3=['1','3','2','4'];
-let array4='random';
+let currentLight;
+let activeChenillard='normal';
 
-let currentLight='4';
+let m1=new Motif([1,1,0,0]);
+let m2=new Motif([0,1,1,0]);
+let m3=new Motif([0,0,1,1]);
+let m4=new Motif([1,0,0,1]);
+let m5=new Motif([0,0,0,0]);
+let m6=new Motif([0,0,0,0]);
+let m7=new Motif([0,0,0,0]);
+let m8=new Motif([0,0,0,0]);
 
-var connection = knx.Connection({
-  ipAddr: '192.168.0.5',
-  ipPort: 3671,
-  //interface: 'eth0',
-  //physAddr: '1.1',
-  // set the log level for messsages printed on the console. This can be 'error', 'warn', 'info' (default), 'debug', or 'trace'.
-  //loglevel: 'info',
-  // print lots of debug output to the console
-  //debug: true,
-  // do not automatically connect, but use connection.Connect() to establish connection
-  //manualConnect: true,  
-  // use tunneling with multicast (router) - this is NOT supported by all routers! See README-resilience.md
-  //forceTunneling: true,
-  // wait at least 10 millisec between each datagram
-  //minimumDelay: 10,
-  // enable this option to suppress the acknowledge flag with outgoing L_Data.req requests. LoxOne needs this
-  //suppress_ack_ldatareq: false,
-  // define your event handlers here:
-  handlers: {
-    connected: function() {
-      console.log('Connected!');
-      setTimeout(function(){
-        connection.write("0/1/1", 1);
-        connection.write("0/1/2", 1);
-        connection.write("0/1/3", 1);
-        connection.write("0/1/4", 1);
+
+let currentMotif=m5;
+
+const express = require('express');
+const app = express();
+const fs = require('fs');
+var url = require("url");
+var querystring = require('querystring');
+
+let connection;
+
+let chenillard;
+let motifChenillard;
+
+app.get('/connect', (req, res) => {
+  connection = knx.Connection({
+    ipAddr: '192.168.0.10',
+    ipPort: 3671,
+    // define your event handlers here:
+    handlers: {
+      connected: function() {
+        console.log('Connected!');
+        res.end();
         setTimeout(function(){
-          connection.write("0/1/1", 0);
-          connection.write("0/1/2", 0);
-          connection.write("0/1/3", 0);
-          connection.write("0/1/4", 0);
+          connection.write("0/1/1", 1);
+          connection.write("0/1/2", 1);
+          connection.write("0/1/3", 1);
+          connection.write("0/1/4", 1);
           setTimeout(function(){
-            chenillard=new Chenillard(array1,1500);
-          },500);
-        },1000);
-      },1500);
-
-    },
-    event: function (evt, src, dest, value) {
-      //console.log("%s **** KNX EVENT: %j, src: %j, dest: %j, value: %j",
-      //new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''),
-      //evt, src, dest, value);
-      switch(dest){
-        case '0/3/1': //start/stop chenillard
-          switch(button1State){
-            case 0:
-              chenillard.start();
-              button1State=1;
+            connection.write("0/1/1", 0);
+            connection.write("0/1/2", 0);
+            connection.write("0/1/3", 0);
+            connection.write("0/1/4", 0);
+            setTimeout(function(){
+              chenillard=new Chenillard(array1,1500);
+              motifChenillard=new MotifChenillard([m5,m1,m6,m2,m7,m3,m8,m4],1500);
+            },500);
+          },1000);
+        },1500);
+  
+      },
+      event: function (evt, src, dest, value) {
+        //console.log("%s **** KNX EVENT: %j, src: %j, dest: %j, value: %j",
+        //new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''),
+        //evt, src, dest, value);
+        switch(dest){
+          case '0/3/1': //start/stop chenillard
+          switch(activeChenillard){
+            case 'normal' :
+              switch(button1State){
+                case 0:
+                  chenillard.start();
+                  button1State=1;
+                break;
+                case 1:
+                  chenillard.stop();
+                  button1State=0;
+                break;
+              }
             break;
-            case 1:
-              chenillard.stop();
-              button1State=0;
+            case 'motif':
+              switch(button1StateMotif){
+                case 0:
+                  motifChenillard.start();
+                  button1StateMotif=1;
+                break;
+                case 1:
+                  motifChenillard.stop();
+                  button1StateMotif=0;
+                break;
+              } 
             break;
           }
-        break;
-
-        case '0/3/2':   //change chennilard order
-          switch(button2State){
-            case 0:
-              chenillard.loadOrder(array2);
-              button2State=1;
+          break;
+  
+          case '0/3/2':   //change chennilard order
+          switch (activeChenillard){
+            case 'normal':
+            switch(button2State){
+              case 0:
+                chenillard.loadOrder(array2);
+                button2State=1;
+              break;
+              case 1:
+                chenillard.loadOrder(array3);
+                button2State=2;
+              break;
+              case 2:
+                chenillard.loadOrder(array1);
+                button2State=0;
+              break;
+            }
             break;
-            case 1:
-              chenillard.loadOrder(array3);
-              button2State=2;
-            break;
-            case 2:
-              chenillard.loadOrder(array1);
-              button2State=0;
+            case 'motif':
             break;
           }
-        break;
-        case '0/3/3':     //increase speed
-          chenillard.increaseMs(250);
-        break;
-        case '0/3/4':     //decrease speed
-          chenillard.decreaseMs(250);
-        break;
+          break;
+
+          case '0/3/3':     //decrease speed
+          switch (activeChenillard){
+            case 'normal':
+              chenillard.increaseMs(250);
+            break;
+            case 'motif':
+              motifChenillard.increaseMs(250);
+            break;
+          }
+          break;
+
+          case '0/3/4':     //increase speed
+          switch (activeChenillard){
+            case 'normal':
+              chenillard.decreaseMs(250);
+            break;
+            case 'motif':
+              motifChenillard.decreaseMs(250);
+            break;
+          }
+          break;
+        }
+      },
+      // get notified on connection errors
+      error: function(connstatus) {
+        console.log("**** ERROR: %j", connstatus);
       }
-    },
-    // get notified on connection errors
-    error: function(connstatus) {
-      console.log("**** ERROR: %j", connstatus);
     }
+  });
+});
+
+app.get('/disconnect', (req, res) => {
+  connection.Disconnect();
+  console.log('Disconnected');
+  res.end();
+});
+
+app.get('/reset', (req, res) => {
+    connection.write("0/1/1", 0);
+    connection.write("0/1/2", 0);
+    connection.write("0/1/3", 0);
+    connection.write("0/1/4", 0);
+    res.end();
+});
+
+/////////////////////////
+//  Simple chenillard //
+////////////////////////
+
+app.get('/start', (req, res) => {
+  activeChenillard='normal';
+  chenillard.start();
+  button1State=1;
+  res.end();
+});
+
+app.get('/stop', (req, res) => {
+  chenillard.stop();
+  button1State=0;
+  res.end();
+});
+
+app.get('/change', (req, res) => {
+  switch(button2State){
+    case 0:
+      chenillard.loadOrder(array2);
+      button2State=1;
+    break;
+    case 1:
+      chenillard.loadOrder(array3);
+      button2State=2;
+    break;
+    case 2:
+      chenillard.loadOrder(array1);
+      button2State=0;
+    break;
+  }
+  res.end();
+});
+
+app.get('/decrease', (req, res) => {
+
+  //  /decrease ==> default value =250 ms
+  //  /decrease?speed=X ==> value =X ms
+
+  var params = querystring.parse(url.parse(req.url).query);
+  if ('speed' in params){
+    chenillard.increaseMs(params['speed']);
+    console.log('decreased by '+params['speed']);
+  }
+  else{
+    chenillard.increaseMs(250);
+    console.log('decreased by 250');
+  }
+  res.end();
+});
+
+app.get('/increase', (req, res) => {
+
+  //  /increase ==> default value =250 ms
+  //  /increase?speed=X ==> value =X ms
+
+  var params = querystring.parse(url.parse(req.url).query);
+  if ('speed' in params){
+    chenillard.decreaseMs(params['speed']);
+    console.log('increased by '+params['speed']);
+  }
+  else{
+    chenillard.decreaseMs(250);
+    console.log('increased by 250');
+  }
+  res.end();
+});
+
+app.get('/setSpeed', (req, res) => {
+
+  //  /setSpeed ==> default value =250 ms
+  //  /setSpeed?speed=X ==> value =X ms
+
+  var params = querystring.parse(url.parse(req.url).query);
+  if ('speed' in params){
+    chenillard.loadMs(params['speed']);
+    console.log('set to '+params['speed']);
+  }
+  else{
+    chenillard.loadMs(1000);
+    console.log('set to 1000');
+  }
+  res.end();
+});
+
+app.get('/setOrder', (req, res) => {
+
+  //  /setOrder?order=['4','1','3','2']
+
+  //  /setOrder?order=array1
+      //  array1=['1','2','3','4'];
+      //  array2=['4','3','2','1'];
+      //  array3=['1','3','2','4'];
+      //  array4='random';
+
+  try{
+    var params = querystring.parse(url.parse(req.url).query);
+    if ('order' in params){
+      chenillard.loadOrder(eval(params['order']));
+      console.log('order set to ['+eval(params['order'])+']');
+    }
+    res.end();
+  }
+  catch{
+    var params = querystring.parse(url.parse(req.url).query);
+    if ('order' in params){
+      chenillard.loadOrder(params['order'].replace("[","").replace("]","").split(","));
+      console.log('order set to '+params['order']);
+    }
+    res.end();
   }
 });
 
-// Handling Ctrl-C cleanly in Node.js
-/**process.on('SIGINT', function() {
-  connection.Disconnect();
-  console.log('Disconnected');
-  process.exit();
-});**/
+/////////////////////////
+//  Motif chenillard //
+////////////////////////
 
-/*let chenillard=new Chenillard(array1,1000);
-chenillard.start();
-  setTimeout(function(){
-    console.log('speedDecreased');
-    chenillard.decreaseMs(500);
-    setTimeout(function(){
-      console.log('speedIncreased');
-      chenillard.increaseMs(1000);
-      console.log(chenillard.getMs())
-      setTimeout(function(){
-      },3000);
-    },3000);
-},3000);*/
+app.get('/startMotif', (req, res) => {
+  activeChenillard='motif';
+  motifChenillard.start();
+  button1StateMotif=1;
+  res.end();
+});
+
+app.get('/stopMotif', (req, res) => {
+  motifChenillard.stop();
+  button1StateMotif=0;
+  res.end();
+});
+
+app.get('/decreaseMotif', (req, res) => {
+
+  //  /decreaseMotif ==> default value =250 ms
+  //  /decreaseMotif?speed=X ==> value =X ms
+
+  var params = querystring.parse(url.parse(req.url).query);
+  if ('speed' in params){
+    motifChenillard.increaseMs(params['speed']);
+    console.log('decreased by '+params['speed']);
+  }
+  else{
+    motifChenillard.increaseMs(250);
+    console.log('decreased by 250');
+  }
+  res.end();
+});
+
+app.get('/increaseMotif', (req, res) => {
+
+  //  /increaseMotif ==> default value =250 ms
+  //  /increaseMotif?speed=X ==> value =X ms
+
+  var params = querystring.parse(url.parse(req.url).query);
+  if ('speed' in params){
+    motifChenillard.decreaseMs(params['speed']);
+    console.log('increased by '+params['speed']);
+  }
+  else{
+    motifChenillard.decreaseMs(250);
+    console.log('increased by 250');
+  }
+  res.end();
+});
+
+app.get('/setSpeedMotif', (req, res) => {
+
+  //  /setSpeedMotif ==> default value =250 ms
+  //  /setSpeedMotif?speed=X ==> value =X ms
+
+  var params = querystring.parse(url.parse(req.url).query);
+  if ('speed' in params){
+    motifChenillard.loadMs(params['speed']);
+    console.log('set to '+params['speed']);
+  }
+  else{
+    motifChenillard.loadMs(1000);
+    console.log('set to 1000');
+  }
+  res.end();
+});
+
+app.get('/connectBoth', (req, res) => {
+
+  let ready1=false;
+  let ready2=false;
+
+  let bothChenillard;
+
+  let currentLight='8';
+
+  let connection0 = knx.Connection({
+    ipAddr: '192.168.0.5',
+    ipPort: 3671,
+    // define your event handlers here:
+    handlers: {
+      connected: function() {
+        console.log('Connected to 1 !');
+        res.end();
+        setTimeout(function(){
+          connection0.write("0/1/1", 1);
+          connection0.write("0/1/2", 1);
+          connection0.write("0/1/3", 1);
+          connection0.write("0/1/4", 1);
+          setTimeout(function(){
+            connection0.write("0/1/1", 0);
+            connection0.write("0/1/2", 0);
+            connection0.write("0/1/3", 0);
+            connection0.write("0/1/4", 0);
+            setTimeout(function(){
+              ready1=true;
+              bothChenillard=startBothChenillard(['1','4','6','7','2','3','5','8'],500);
+            },500);
+          },1000);
+        },1500);
+      },
+      event: function (evt, src, dest, value) {
+        //console.log("%s **** KNX EVENT: %j, src: %j, dest: %j, value: %j",
+        //new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''),
+        //evt, src, dest, value);
+        switch(dest){
+          case '0/3/1': //start/stop chenillard
+         
+          break;
+  
+          case '0/3/2':   //change chennilard order
+         
+          break;
+
+          case '0/3/3':     //decrease speed
+         
+          break;
+
+          case '0/3/4':     //increase speed
+          
+          break;
+        }
+      },
+      // get notified on connection errors
+      error: function(connstatus) {
+        console.log("**** ERROR: %j", connstatus);
+      }
+    }
+  });
+
+  let connection1 = knx.Connection({
+    ipAddr: '192.168.0.6',
+    ipPort: 3671,
+    // define your event handlers here:
+    handlers: {
+      connected: function() {
+        console.log('Connected to 2 !');
+        res.end();
+        setTimeout(function(){
+          connection1.write("0/1/1", 1);
+          connection1.write("0/1/2", 1);
+          connection1.write("0/1/3", 1);
+          connection1.write("0/1/4", 1);
+          setTimeout(function(){
+            connection1.write("0/1/1", 0);
+            connection1.write("0/1/2", 0);
+            connection1.write("0/1/3", 0);
+            connection1.write("0/1/4", 0);
+            setTimeout(function(){
+              ready2=true;
+              bothChenillard=startBothChenillard(['1','4','6','7','2','3','5','8','9'],500);
+            },500);
+          },1000);
+        },1500);
+      },
+      event: function (evt, src, dest, value) {
+        //console.log("%s **** KNX EVENT: %j, src: %j, dest: %j, value: %j",
+        //new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''),
+        //evt, src, dest, value);
+        switch(dest){
+          case '0/3/1': //start/stop chenillard
+         
+          break;
+  
+          case '0/3/2':   //change chennilard order
+         
+          break;
+
+          case '0/3/3':     //decrease speed
+         
+          break;
+
+          case '0/3/4':     //increase speed
+          
+          break;
+        }
+      },
+      // get notified on connection errors
+      error: function(connstatus) {
+        console.log("**** ERROR: %j", connstatus);
+      }
+    }
+  });
+
+  function startBothChenillard(arrayOrder,ms){
+    if(ready1&ready2){
+      let i=arrayOrder.indexOf(currentBothLight);
+      let chenillard=setInterval(function(){
+        if (i==arrayOrder.length){i=0;}
+        console.log(((i+1)%8)+1);
+        console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i));
+        console.log('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4),convert(arrayOrder,(i+1)%arrayOrder.length));
+        //eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0)
+        //eval('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4)).write("0/1/"+convert(arrayOrder,(i+1)%arrayOrder.length),1)
+        i++;  
+      },ms);
+      return chenillard;
+    }
+  }
+  
+  function convert(array,index){
+    if(Number(array[index])%4==0){
+      return String(4);
+    }
+    else{ 
+      return String(Number(array[index])%4);
+    }
+  }
+
+  /*function startBothChenillard(arrayOrder,ms){
+    if(ready1&ready2){
+      let i=arrayOrder.indexOf(currentBothLight);
+      let chenillard=setInterval(function(){
+        if (i==8){i=0;}
+        connection1.write("0/1/1", 0);
+        connection1.write("0/1/2", 0);
+        connection1.write("0/1/3", 0);
+        connection1.write("0/1/4", 0);
+        connection2.write("0/1/1", 0);
+        connection2.write("0/1/2", 0);
+        connection2.write("0/1/3", 0);
+        connection2.write("0/1/4", 0);
+
+        if(Math.trunc(i/4)==0){
+          console.log(arrayOrder[i%4]);
+          connection1.write("0/1/"+arrayOrder[i%4], 1);
+          currentLight=String(arrayOrder[i]);
+          i++;  
+        }
+        else if(Math.trunc(i/4)==1){
+          console.log(arrayOrder[i%4]);
+          connection2.write("0/1/"+arrayOrder[i%4], 1);
+          currentLight=String(arrayOrder[i]);
+          i++;  
+        } 
+      },ms);
+      return chenillard;
+    }
+    else{
+      return null;
+    }
+  }*/
+
+});
+
+/*let currentBothLight='9';
+let bothChenillard=startBothChenillard(['1','2','3','4'],500);
+function startBothChenillard(arrayOrder,ms){
+  //if(ready1&ready2){
+    let i=arrayOrder.indexOf(currentBothLight);
+    let chenillard=setInterval(function(){
+      if (i==arrayOrder.length){i=0;}
+      console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i));
+      console.log('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4),convert(arrayOrder,(i+1)%arrayOrder.length));
+      //eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0)
+      //eval('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4)).write("0/1/"+convert(arrayOrder,(i+1)%arrayOrder.length),1)
+      i++;  
+    },ms);
+    return chenillard;
+ // }
+}
+
+function convert(array,index){
+  if(Number(array[index])%4==0){
+    return String(4);
+  }
+  else{ 
+    return String(Number(array[index])%4);
+  }
+}*/
+
+app.get('/', (req, res) => {
+  console.log('test');
+  res.end();
+});
+
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});
