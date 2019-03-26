@@ -49,40 +49,6 @@ class Chenillard {
   }
 }
 
-/*function chenillardOn(arrayOrder,ms){
-  if(arrayOrder=='random'){
-    return randomChenillardOn(ms);
-  }
-  else{
-    let i=arrayOrder.indexOf(currentLight);
-    let chenillard=setInterval(function(){
-      if (i==4){i=0;}
-      console.log(arrayOrder[i]);
-      console.log(arrayOrder[(i+1)%4]);
-      connection.write("0/1/"+arrayOrder[i], 0);
-      connection.write("0/1/"+arrayOrder[(i+1)%4], 1);
-      currentLight=String(arrayOrder[(i+1)%4]);
-      i++;  
-    },ms);
-    return chenillard;
-  }
-}*/
-
-/*function randomChenillardOn(ms){
-  let arrayOrder=['1','2','3','4'];
-  let i;
-    let chenillard=setInterval(function(){
-      i=arrayOrder.indexOf(currentLight);
-      connection.write("0/1/"+arrayOrder[i], 0);
-      arrayOrder.splice(i,1);
-      next=getRandomInt(3);
-      connection.write("0/1/"+arrayOrder[next], 1);
-      arrayOrder.push(currentLight);
-      currentLight=arrayOrder[next];
-    },ms);
-    return chenillard;
-}*/
-
 function chenillardOn(arrayOrder,ms){
   if(arrayOrder.includes('random')){
     return randomChenillardOn(arrayOrder.replace( /^\D+/g, ''),ms);
@@ -92,10 +58,10 @@ function chenillardOn(arrayOrder,ms){
     let i=arrayOrder.indexOf(currentLight);
     let chenillard=setInterval(function(){
       if (i==arrayOrder.length){i=0;}
-      console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i));
-      console.log('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4),convert(arrayOrder,(i+1)%arrayOrder.length));
-      //eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0);
-      //eval('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4)).write("0/1/"+convert(arrayOrder,(i+1)%arrayOrder.length),1);
+      console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i), arrayOrder[i]);
+      console.log('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4),convert(arrayOrder,(i+1)%arrayOrder.length), arrayOrder[(i+1)%arrayOrder.length]);
+      eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0);
+      eval('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4)).write("0/1/"+convert(arrayOrder,(i+1)%arrayOrder.length),1);
       currentLight=String(convert(arrayOrder,(i+1)%arrayOrder.length));
       i++;  
     },ms);
@@ -122,11 +88,11 @@ function randomChenillardOn(size,ms){
     let chenillard=setInterval(function(){
       i=arrayOrder.indexOf(currentLight);
       console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i),arrayOrder[i]);
-     // eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0);
+     eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0);
       arrayOrder.splice(i,1);
       next=getRandomInt(arrayOrder.length-1);
       console.log('connection'+Math.trunc((Number(arrayOrder[next])-1)/4),convert(arrayOrder,next),arrayOrder[next]);
-     // eval('connection'+Math.trunc((Number(arrayOrder[next])-1)/4)).write("0/1/"+convert(arrayOrder,next),1);
+     eval('connection'+Math.trunc((Number(arrayOrder[next])-1)/4)).write("0/1/"+convert(arrayOrder,next),1);
       arrayOrder.push(currentLight);
       currentLight=arrayOrder[next];
     },ms);
@@ -267,12 +233,14 @@ var querystring = require('querystring');
 
 let connection;
 
+let jsonConnection=JSON.parse("{ \"idConnection\"=\"light\": [\"1\",\"2\",\"3\",\"4\"],\"state\": [0,0,0,0]}");
+
 let chenillard;
 let motifChenillard;
 
 app.get('/connect', (req, res) => {
   connection = knx.Connection({
-    ipAddr: '192.168.0.10',
+    ipAddr: '192.168.0.6',
     ipPort: 3671,
     // define your event handlers here:
     handlers: {
@@ -290,7 +258,7 @@ app.get('/connect', (req, res) => {
             connection.write("0/1/3", 0);
             connection.write("0/1/4", 0);
             setTimeout(function(){
-              chenillard=new Chenillard(array1,1500);
+              chenillard=new Chenillard(['1','2','3','4'],1500);
               motifChenillard=new MotifChenillard([m5,m1,m6,m2,m7,m3,m8,m4],1500);
             },500);
           },1000);
@@ -298,9 +266,12 @@ app.get('/connect', (req, res) => {
   
       },
       event: function (evt, src, dest, value) {
-        //console.log("%s **** KNX EVENT: %j, src: %j, dest: %j, value: %j",
-        //new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''),
-        //evt, src, dest, value);
+        console.log(dest, JSON.parse(JSON.stringify(value)).data[0]);
+        console.log(dest[dest.length-1]);
+        index=jsonConnection.light.indexOf(dest[dest.length-1]);
+        console.log(index);
+        jsonConnection.state[index]=JSON.parse(JSON.stringify(value)).data[0];
+        console.log(JSON.stringify(jsonConnection));
         switch(dest){
           case '0/3/1': //start/stop chenillard
           switch(activeChenillard){
@@ -586,9 +557,9 @@ app.get('/connectBoth', (req, res) => {
   let ready1=false;
   let ready2=false;
 
-  let bothChenillard;
+  let bothChenillard =new Chenillard(['1','3','5','7','2','4','6','8'],500);
 
-  let currentLight='8';
+  let currentLight;
 
   let connection0 = knx.Connection({
     ipAddr: '192.168.0.5',
@@ -610,7 +581,7 @@ app.get('/connectBoth', (req, res) => {
             connection0.write("0/1/4", 0);
             setTimeout(function(){
               ready1=true;
-              bothChenillard=startBothChenillard(['1','4','6','7','2','3','5','8'],500);
+              if (ready1&ready2){bothChenillard.start();}
             },500);
           },1000);
         },1500);
@@ -664,7 +635,7 @@ app.get('/connectBoth', (req, res) => {
             connection1.write("0/1/4", 0);
             setTimeout(function(){
               ready2=true;
-              bothChenillard=startBothChenillard(['1','4','6','7','2','3','5','8','9'],500);
+              if (ready1&ready2){bothChenillard.start();}
             },500);
           },1000);
         },1500);
@@ -698,7 +669,7 @@ app.get('/connectBoth', (req, res) => {
     }
   });
 
-  function startBothChenillard(arrayOrder,ms){
+  /*function startBothChenillard(arrayOrder,ms){
     if(ready1&ready2){
       let i=arrayOrder.indexOf(currentBothLight);
       let chenillard=setInterval(function(){
@@ -721,7 +692,7 @@ app.get('/connectBoth', (req, res) => {
     else{ 
       return String(Number(array[index])%4);
     }
-  }
+  }*/
 
   /*function startBothChenillard(arrayOrder,ms){
     if(ready1&ready2){
