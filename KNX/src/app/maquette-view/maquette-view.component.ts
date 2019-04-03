@@ -28,12 +28,10 @@ this.lampes=this.knxService.lampes;
  }
 startchenillard()
 {
-var msg={ip:this.IP,data:"chenillard"};
-this.knxService.startChenillard(JSON.stringify(msg));
+  var msg={"cmd":"start", "data":{ "ip" : this.IP}};
+  this.knxService.startChenillard(JSON.stringify(msg));
 }
-startrequete()
-{
-  this.knxService.startrequete();
-}
+
+
 
 }
