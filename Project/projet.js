@@ -231,16 +231,59 @@ const fs = require('fs');
 var url = require("url");
 var querystring = require('querystring');
 
-let connection;
+let ipConnect='192.168.0.5';
+let connectionArray=[];   //[[connection0,socket1,socket2],[connection1,socket1],[connection2,socket3]]
 
-let jsonConnection=JSON.parse("{ \"idConnection\"=\"light\": [\"1\",\"2\",\"3\",\"4\"],\"state\": [0,0,0,0]}");
+let connectionJson=[];   //[jsonCon0,jsonCon1,jsonCon2]
+
+let jsonConnection;
+
+/*let json=`{
+  "lampes": [
+    {
+      "status": 0,
+      "lampeId": 1
+    },
+    {
+      "status": 0,
+      "lampeId": 2
+    },
+    {
+      "status": 0,
+      "lampeId": 3
+    },
+    {
+      "status": 0,
+      "lampeId": 4
+    }
+  ]
+}`*/
 
 let chenillard;
 let motifChenillard;
 
 app.get('/connect', (req, res) => {
+  
+  index=connectionJson.findIndex(function (obj) {return  obj.ip==ipConnect;})
+  if(index==-1){
+    //La connection entre le serveur et le systeme n'est pas établie
+    index=connectionJson.findIndex(function (obj) {return  obj==null})
+    if(index==-1){
+      jsonConnection=JSON.parse("{ \"id\""=+connectionJson.length+",\"ip\"=\""+ipConnect+"\",\"light\": [\"1\",\"2\",\"3\",\"4\"],\"state\": [0,0,0,0]}");
+      connectionJson.push(jsonConnection);
+    }
+    else{
+      jsonConnection=JSON.parse("{ \"id\""=+index+",\"ip\"=\""+ipConnect+"\",\"light\": [\"1\",\"2\",\"3\",\"4\"],\"state\": [0,0,0,0]}");
+      connectionJson[index](jsonConnection);
+    }
+  }
+  else{
+  //La connection entre le serveur et le systeme est établie
+
+  }
+  
   connection = knx.Connection({
-    ipAddr: '192.168.0.6',
+    ipAddr: ipConnect,
     ipPort: 3671,
     // define your event handlers here:
     handlers: {
@@ -266,10 +309,7 @@ app.get('/connect', (req, res) => {
   
       },
       event: function (evt, src, dest, value) {
-        console.log(dest, JSON.parse(JSON.stringify(value)).data[0]);
-        console.log(dest[dest.length-1]);
         index=jsonConnection.light.indexOf(dest[dest.length-1]);
-        console.log(index);
         jsonConnection.state[index]=JSON.parse(JSON.stringify(value)).data[0];
         console.log(JSON.stringify(jsonConnection));
         switch(dest){
