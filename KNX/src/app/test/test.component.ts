@@ -30,7 +30,7 @@ export class TestComponent implements OnInit {
   }
   click()
   {
-    var msg={ip:this.knxService.IP,lampeId:this.indexOfAppareil}
+    var msg={ip:this.knxService.IP,lampId:this.indexOfAppareil}
 
     if(this.lampeStatus==0)
     {

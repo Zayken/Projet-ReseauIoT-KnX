@@ -118,7 +118,7 @@ export class KNXService {
     }
     startrequete()
     {
-      this.httpClient.get("http://localhost:8080/",{responseType: 'text'})
+      this.httpClient.get("http://localhost:8080/")
    .subscribe(
 
    )

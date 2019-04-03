@@ -274,7 +274,8 @@ app.post('/connect', function (req, res) {
 });
 
 req.on('end', () => {
-console.log("IP connect : "+JSON.parse(body).data.ip);
+  let json=JSON.parse(body);
+console.log("IP connect : "+json.data.ip);
 
 
 /*connection = knx.Connection({
@@ -390,7 +391,7 @@ console.log("IP connect : "+JSON.parse(body).data.ip);
   }
 });*/
 
-  msg={ip : JSON.parse(body).ip, state :1};
+  let msg={ip : json.data.ip, state :1};
   res.send(JSON.stringify(msg));
 });
   /*index=connectionJson.findIndex(function (obj) {return  obj.ip==ipConnect;})
@@ -443,6 +444,22 @@ app.get('/stop', (req, res) => {
   chenillard.stop();
   button1State=0;
   res.end();
+});
+
+app.post('/lightState', (req, res) => {
+  console.log('/lightState');
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString();
+});
+
+req.on('end', () => {
+  let json=JSON.parse(body);
+  console.log("Light: "+json.data.lampId+" changed to "+json.data.state);
+  //TODO
+  let msg={ip : json.data.ip, state :1};
+  res.send(JSON.stringify(msg));
+  });
 });
 
 app.get('/change', (req, res) => {
