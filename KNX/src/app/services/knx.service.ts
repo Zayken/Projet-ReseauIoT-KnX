@@ -116,19 +116,13 @@ export class KNXService {
       );
       return appareil;
     }
-    startrequete()
-    {
-      this.httpClient.get("http://localhost:8080/")
-   .subscribe(
-
-   )
-  }
-
+  
+  
     
  startChenillard(data:string)
  {
 
- this.httpClient.post("http://localhost:3000/chenillard",data,{responseType: 'text'})
+ this.httpClient.post("http://localhost:3000/start",data,{responseType: 'text'})
    .subscribe(
       (res)=> {
         console.log(JSON.stringify(res));
