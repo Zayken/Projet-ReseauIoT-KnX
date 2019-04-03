@@ -1,0 +1,11 @@
+<li [ngClass]="{'list-group-item':true,
+                'list-group-item-success':lampeStatus==1,
+                'list-group-item-danger':lampeStatus==0
+                }">
+  <h4 [ngStyle]="{color:getColor()}">Lampe : {{getid()}} -- Status : {{getStatus()}}</h4>
+<button class="btn btn-success"(click)="onSwitchOn()" name="button"[disabled]="lampeStatus==1">Allumer</button>
+<button class="btn btn-danger"(click)="onSwitchOff()" name="button"[disabled]="lampeStatus==0">Eteindre</button>
+<p class="text-danger">{{errorMessage }}</p>
+</li>
+
+

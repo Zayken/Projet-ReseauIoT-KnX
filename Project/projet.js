@@ -232,9 +232,9 @@ var url = require("url");
 var querystring = require('querystring');
 
 let ipConnect='192.168.0.5';
-let connectionArray=[];   //[[connection0,socket1,socket2],[connection1,socket1],[connection2,socket3]]
+//let connectionArray=[];   //[[connection0,socket1,socket2],[connection1,socket1],[connection2,socket3]]
 
-let connectionJson=[];   //[jsonCon0,jsonCon1,jsonCon2]
+//let connectionJson=[];   //[jsonCon0,jsonCon1,jsonCon2]
 
 let jsonConnection;
 
@@ -262,9 +262,138 @@ let jsonConnection;
 let chenillard;
 let motifChenillard;
 
-app.get('/connect', (req, res) => {
-  
-  index=connectionJson.findIndex(function (obj) {return  obj.ip==ipConnect;})
+var cors = require('cors')
+
+ 
+app.use(cors());
+app.post('/connect', function (req, res) {
+  console.log('/connect');
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString();
+});
+
+req.on('end', () => {
+console.log("IP connect : "+JSON.parse(body).data.ip);
+
+
+/*connection = knx.Connection({
+  ipAddr: ipConnect,
+  ipPort: 3671,
+  // define your event handlers here:
+  handlers: {
+    connected: function() {
+      console.log('Connected!');
+      res.end();
+      setTimeout(function(){
+        connection.write("0/1/1", 1);
+        connection.write("0/1/2", 1);
+        connection.write("0/1/3", 1);
+        connection.write("0/1/4", 1);
+        setTimeout(function(){
+          connection.write("0/1/1", 0);
+          connection.write("0/1/2", 0);
+          connection.write("0/1/3", 0);
+          connection.write("0/1/4", 0);
+          setTimeout(function(){
+            chenillard=new Chenillard(['1','2','3','4'],1500);
+            motifChenillard=new MotifChenillard([m5,m1,m6,m2,m7,m3,m8,m4],1500);
+          },500);
+        },1000);
+      },1500);
+
+    },
+    event: function (evt, src, dest, value) {
+      index=jsonConnection.light.indexOf(dest[dest.length-1]);
+      jsonConnection.state[index]=JSON.parse(JSON.stringify(value)).data[0];
+      console.log(JSON.stringify(jsonConnection));
+      switch(dest){
+        case '0/3/1': //start/stop chenillard
+        switch(activeChenillard){
+          case 'normal' :
+            switch(button1State){
+              case 0:
+                chenillard.start();
+                button1State=1;
+              break;
+              case 1:
+                chenillard.stop();
+                button1State=0;
+              break;
+            }
+          break;
+          case 'motif':
+            switch(button1StateMotif){
+              case 0:
+                motifChenillard.start();
+                button1StateMotif=1;
+              break;
+              case 1:
+                motifChenillard.stop();
+                button1StateMotif=0;
+              break;
+            } 
+          break;
+        }
+        break;
+
+        case '0/3/2':   //change chennilard order
+        switch (activeChenillard){
+          case 'normal':
+          switch(button2State){
+            case 0:
+              chenillard.loadOrder(array2);
+              button2State=1;
+            break;
+            case 1:
+              chenillard.loadOrder(array3);
+              button2State=2;
+            break;
+            case 2:
+              chenillard.loadOrder(array1);
+              button2State=0;
+            break;
+          }
+          break;
+          case 'motif':
+          break;
+        }
+        break;
+
+        case '0/3/3':     //decrease speed
+        switch (activeChenillard){
+          case 'normal':
+            chenillard.increaseMs(250);
+          break;
+          case 'motif':
+            motifChenillard.increaseMs(250);
+          break;
+        }
+        break;
+
+        case '0/3/4':     //increase speed
+        switch (activeChenillard){
+          case 'normal':
+            chenillard.decreaseMs(250);
+          break;
+          case 'motif':
+            motifChenillard.decreaseMs(250);
+          break;
+        }
+        break;
+      }
+    },
+    // get notified on connection errors
+    error: function(connstatus) {
+      console.log("**** ERROR: %j", connstatus);
+    }
+  }
+});*/
+
+  msg={ip : JSON.parse(body).ip, state :1};
+  res.send(JSON.stringify(msg));
+});
+  /*index=connectionJson.findIndex(function (obj) {return  obj.ip==ipConnect;})
   if(index==-1){
     //La connection entre le serveur et le systeme n'est pas établie
     index=connectionJson.findIndex(function (obj) {return  obj==null})
@@ -280,120 +409,9 @@ app.get('/connect', (req, res) => {
   else{
   //La connection entre le serveur et le systeme est établie
 
-  }
+  }*/
   
-  connection = knx.Connection({
-    ipAddr: ipConnect,
-    ipPort: 3671,
-    // define your event handlers here:
-    handlers: {
-      connected: function() {
-        console.log('Connected!');
-        res.end();
-        setTimeout(function(){
-          connection.write("0/1/1", 1);
-          connection.write("0/1/2", 1);
-          connection.write("0/1/3", 1);
-          connection.write("0/1/4", 1);
-          setTimeout(function(){
-            connection.write("0/1/1", 0);
-            connection.write("0/1/2", 0);
-            connection.write("0/1/3", 0);
-            connection.write("0/1/4", 0);
-            setTimeout(function(){
-              chenillard=new Chenillard(['1','2','3','4'],1500);
-              motifChenillard=new MotifChenillard([m5,m1,m6,m2,m7,m3,m8,m4],1500);
-            },500);
-          },1000);
-        },1500);
   
-      },
-      event: function (evt, src, dest, value) {
-        index=jsonConnection.light.indexOf(dest[dest.length-1]);
-        jsonConnection.state[index]=JSON.parse(JSON.stringify(value)).data[0];
-        console.log(JSON.stringify(jsonConnection));
-        switch(dest){
-          case '0/3/1': //start/stop chenillard
-          switch(activeChenillard){
-            case 'normal' :
-              switch(button1State){
-                case 0:
-                  chenillard.start();
-                  button1State=1;
-                break;
-                case 1:
-                  chenillard.stop();
-                  button1State=0;
-                break;
-              }
-            break;
-            case 'motif':
-              switch(button1StateMotif){
-                case 0:
-                  motifChenillard.start();
-                  button1StateMotif=1;
-                break;
-                case 1:
-                  motifChenillard.stop();
-                  button1StateMotif=0;
-                break;
-              } 
-            break;
-          }
-          break;
-  
-          case '0/3/2':   //change chennilard order
-          switch (activeChenillard){
-            case 'normal':
-            switch(button2State){
-              case 0:
-                chenillard.loadOrder(array2);
-                button2State=1;
-              break;
-              case 1:
-                chenillard.loadOrder(array3);
-                button2State=2;
-              break;
-              case 2:
-                chenillard.loadOrder(array1);
-                button2State=0;
-              break;
-            }
-            break;
-            case 'motif':
-            break;
-          }
-          break;
-
-          case '0/3/3':     //decrease speed
-          switch (activeChenillard){
-            case 'normal':
-              chenillard.increaseMs(250);
-            break;
-            case 'motif':
-              motifChenillard.increaseMs(250);
-            break;
-          }
-          break;
-
-          case '0/3/4':     //increase speed
-          switch (activeChenillard){
-            case 'normal':
-              chenillard.decreaseMs(250);
-            break;
-            case 'motif':
-              motifChenillard.decreaseMs(250);
-            break;
-          }
-          break;
-        }
-      },
-      // get notified on connection errors
-      error: function(connstatus) {
-        console.log("**** ERROR: %j", connstatus);
-      }
-    }
-  });
 });
 
 app.get('/disconnect', (req, res) => {
