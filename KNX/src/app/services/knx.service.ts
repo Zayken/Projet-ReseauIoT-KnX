@@ -49,17 +49,17 @@ export class KNXService {
     this.emitAppareilSubject();
 
   }
-  switchOnOne(data :string)
+  switchLight(data :string,index:number)
   {
-    var index=JSON.stringify(JSON.parse(data).lampeId);
+   
     this.httpClient.post("http://localhost:3000/lightState",data,{responseType: 'text'})
     .subscribe(
        (res)=> {
          var json=JSON.parse(res);
          console.log(JSON.stringify(res));
-      if(json.state==1)
+      if(json.check==1)
       {console.log("reussi");
-        this.lampes[index].status=1;
+        this.lampes[index].status=json.state;
         this.emitAppareilSubject();        
       }
       else
@@ -78,34 +78,7 @@ export class KNXService {
 
   }
 
-    switchOffOne(data :string)
-    {
-      var index=JSON.stringify(JSON.parse(data).lampeId);
 
-      this.httpClient.post("http://localhost:3000/lightState",data,{responseType: 'text'})
-      .subscribe(
-         (res)=> {
-           var json=JSON.parse(res);
-           console.log(JSON.stringify(res));
-        if(json.state==1)
-        {
-          this.lampes[index].status=0;
-          this.emitAppareilSubject();        }
-          else
-          {
-            this.errorMessage="Veuiller réessayer";
-          }
-       
-         },
-         (error)=>{
-   
-     console.log("erreur de suavegarde"+ error.message);
-     this.errorMessage=error.message;
-         }
-       )
-     
-
-    }
 
     getAppareilById(id : number)
     {
@@ -151,7 +124,7 @@ export class KNXService {
       (res)=> {
         console.log(JSON.stringify(res));
         var json=JSON.parse(res);
-        if(json.state==1)
+        if(json.check==1)
         {
           this.router.navigate(['maquette']);
           this.isConnect=true;

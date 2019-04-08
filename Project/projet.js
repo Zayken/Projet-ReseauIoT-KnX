@@ -1,5 +1,25 @@
 var knx = require('knx');
 
+const app = require('express')();
+
+var http = require('http');
+var fs = require('fs');
+
+// Chargement du fichier index.html affiché au client
+var server = http.createServer(function(req, res) {
+        res.end();
+});
+
+// Chargement de socket.io
+var io = require('socket.io').listen(server);
+
+// Quand un client se connecte, on le note dans la console
+io.sockets.on('connection', function (socket) {
+    console.log('Un client est connecté !');
+});
+
+
+server.listen(8080);
 class Chenillard {
 
   constructor(arrayOrder,ms){
@@ -225,13 +245,10 @@ let m8=new Motif([0,0,0,0]);
 
 let currentMotif=m5;
 
-const express = require('express');
-const app = express();
-const fs = require('fs');
 var url = require("url");
 var querystring = require('querystring');
 
-let ipConnect='192.168.0.5';
+//let ipConnect='192.168.0.5';
 //let connectionArray=[];   //[[connection0,socket1,socket2],[connection1,socket1],[connection2,socket3]]
 
 //let connectionJson=[];   //[jsonCon0,jsonCon1,jsonCon2]
@@ -267,25 +284,20 @@ var cors = require('cors')
  
 app.use(cors());
 app.post('/connect', function (req, res) {
-  console.log('/connect');
   let body = '';
   req.on('data', chunk => {
     body += chunk.toString();
 });
-
 req.on('end', () => {
   let json=JSON.parse(body);
-console.log("IP connect : "+json.data.ip);
-
-
-/*connection = knx.Connection({
-  ipAddr: ipConnect,
+  console.log('Trying to connect');
+connection = knx.Connection({
+  ipAddr: json.data.ip,
   ipPort: 3671,
   // define your event handlers here:
   handlers: {
     connected: function() {
       console.log('Connected!');
-      res.end();
       setTimeout(function(){
         connection.write("0/1/1", 1);
         connection.write("0/1/2", 1);
@@ -297,6 +309,8 @@ console.log("IP connect : "+json.data.ip);
           connection.write("0/1/3", 0);
           connection.write("0/1/4", 0);
           setTimeout(function(){
+            let msg={ip : json.data.ip, check :1};
+            res.send(JSON.stringify(msg));
             chenillard=new Chenillard(['1','2','3','4'],1500);
             motifChenillard=new MotifChenillard([m5,m1,m6,m2,m7,m3,m8,m4],1500);
           },500);
@@ -389,10 +403,8 @@ console.log("IP connect : "+json.data.ip);
       console.log("**** ERROR: %j", connstatus);
     }
   }
-});*/
+});
 
-  let msg={ip : json.data.ip, state :1};
-  res.send(JSON.stringify(msg));
 });
   /*index=connectionJson.findIndex(function (obj) {return  obj.ip==ipConnect;})
   if(index==-1){
@@ -447,7 +459,6 @@ app.get('/stop', (req, res) => {
 });
 
 app.post('/lightState', (req, res) => {
-  console.log('/lightState');
   let body = '';
   req.on('data', chunk => {
     body += chunk.toString();
@@ -456,8 +467,8 @@ app.post('/lightState', (req, res) => {
 req.on('end', () => {
   let json=JSON.parse(body);
   console.log("Light: "+json.data.lampId+" changed to "+json.data.state);
-  //TODO
-  let msg={ip : json.data.ip, state :1};
+  connection.write("0/1/"+json.data.lampId, json.data.state);
+  let msg={ip : json.data.ip,state:json.data.state, check :1};
   res.send(JSON.stringify(msg));
   });
 });
