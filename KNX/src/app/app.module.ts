@@ -15,6 +15,7 @@ import { KNXService } from './services/knx.service';
 import { MaquetteViewComponent } from './maquette-view/maquette-view.component';
 import { ConnectGuardService } from './connect-guard.service';
 import { TestComponent } from './test/test.component';
+import { SocketService } from './services/socket.service';
 
 const appRoutes: Routes = [
   { path: 'auth/signup', component: SignupComponent },
@@ -24,6 +25,8 @@ const appRoutes: Routes = [
   { path: 'maquette', canActivate: [AuthGuardService,ConnectGuardService], component: MaquetteViewComponent },
   { path: '**', redirectTo: 'knx' }
 ];
+
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -42,7 +45,7 @@ const appRoutes: Routes = [
     HttpClientModule,
     RouterModule.forRoot(appRoutes)
   ],
-  providers: [AuthService,AuthGuardService,KNXService],
+  providers: [AuthService,AuthGuardService,KNXService,SocketService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -34,16 +34,16 @@ export class TestComponent implements OnInit {
 
     if(this.lampeStatus==0)
     {
-      msg={"cmd":"lightOn", "data":{ "ip" : this.knxService.IP, "lampeId":this.lampeId, "state":1}};
+      msg={"cmd":"lightOn", "data":{ "ip" : this.knxService.IP, "lampId":this.lampeId, "state":1}};
 
-      this.knxService.switchOnOne(JSON.stringify(msg));
+      this.knxService.switchLight(JSON.stringify(msg),this.indexOfAppareil);
       
     }
     else
     {
-      msg={"cmd":"lightOff", "data":{ "ip" : this.knxService.IP, "lampeId":this.lampeId, "state":0}};
+      msg={"cmd":"lightOff", "data":{ "ip" : this.knxService.IP, "lampId":this.lampeId, "state":0}};
 
-      this.knxService.switchOffOne(JSON.stringify(msg));
+      this.knxService.switchLight(JSON.stringify(msg),this.indexOfAppareil);
 
     }
     this.errorMessage=this.knxService.errorMessage;

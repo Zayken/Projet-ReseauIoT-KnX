@@ -1,6 +1,25 @@
 var knx = require('knx');
- cors = require('cors')
- 
+
+const app = require('express')();
+
+var http = require('http');
+var fs = require('fs');
+
+// Chargement du fichier index.html affiché au client
+var server = http.createServer(function(req, res) {
+        res.end();
+});
+
+// Chargement de socket.io
+var io = require('socket.io').listen(server);
+
+// Quand un client se connecte, on le note dans la console
+io.sockets.on('connection', function (socket) {
+    console.log('Un client est connecté !');
+});
+
+
+server.listen(8080);
 class Chenillard {
 
   constructor(arrayOrder,ms){
@@ -50,40 +69,6 @@ class Chenillard {
   }
 }
 
-/*function chenillardOn(arrayOrder,ms){
-  if(arrayOrder=='random'){
-    return randomChenillardOn(ms);
-  }
-  else{
-    let i=arrayOrder.indexOf(currentLight);
-    let chenillard=setInterval(function(){
-      if (i==4){i=0;}
-      console.log(arrayOrder[i]);
-      console.log(arrayOrder[(i+1)%4]);
-      connection.write("0/1/"+arrayOrder[i], 0);
-      connection.write("0/1/"+arrayOrder[(i+1)%4], 1);
-      currentLight=String(arrayOrder[(i+1)%4]);
-      i++;  
-    },ms);
-    return chenillard;
-  }
-}*/
-
-/*function randomChenillardOn(ms){
-  let arrayOrder=['1','2','3','4'];
-  let i;
-    let chenillard=setInterval(function(){
-      i=arrayOrder.indexOf(currentLight);
-      connection.write("0/1/"+arrayOrder[i], 0);
-      arrayOrder.splice(i,1);
-      next=getRandomInt(3);
-      connection.write("0/1/"+arrayOrder[next], 1);
-      arrayOrder.push(currentLight);
-      currentLight=arrayOrder[next];
-    },ms);
-    return chenillard;
-}*/
-
 function chenillardOn(arrayOrder,ms){
   if(arrayOrder.includes('random')){
     return randomChenillardOn(arrayOrder.replace( /^\D+/g, ''),ms);
@@ -93,10 +78,10 @@ function chenillardOn(arrayOrder,ms){
     let i=arrayOrder.indexOf(currentLight);
     let chenillard=setInterval(function(){
       if (i==arrayOrder.length){i=0;}
-      console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i));
-      console.log('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4),convert(arrayOrder,(i+1)%arrayOrder.length));
-      //eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0);
-      //eval('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4)).write("0/1/"+convert(arrayOrder,(i+1)%arrayOrder.length),1);
+      console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i), arrayOrder[i]);
+      console.log('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4),convert(arrayOrder,(i+1)%arrayOrder.length), arrayOrder[(i+1)%arrayOrder.length]);
+      eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0);
+      eval('connection'+Math.trunc((Number(arrayOrder[(i+1)%arrayOrder.length])-1)/4)).write("0/1/"+convert(arrayOrder,(i+1)%arrayOrder.length),1);
       currentLight=String(convert(arrayOrder,(i+1)%arrayOrder.length));
       i++;  
     },ms);
@@ -123,11 +108,11 @@ function randomChenillardOn(size,ms){
     let chenillard=setInterval(function(){
       i=arrayOrder.indexOf(currentLight);
       console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i),arrayOrder[i]);
-     // eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0);
+     eval('connection'+Math.trunc((Number(arrayOrder[i])-1)/4)).write("0/1/"+convert(arrayOrder,i),0);
       arrayOrder.splice(i,1);
       next=getRandomInt(arrayOrder.length-1);
       console.log('connection'+Math.trunc((Number(arrayOrder[next])-1)/4),convert(arrayOrder,next),arrayOrder[next]);
-     // eval('connection'+Math.trunc((Number(arrayOrder[next])-1)/4)).write("0/1/"+convert(arrayOrder,next),1);
+     eval('connection'+Math.trunc((Number(arrayOrder[next])-1)/4)).write("0/1/"+convert(arrayOrder,next),1);
       arrayOrder.push(currentLight);
       currentLight=arrayOrder[next];
     },ms);
@@ -260,54 +245,59 @@ let m8=new Motif([0,0,0,0]);
 
 let currentMotif=m5;
 
-const express = require('express');
-const app = express();
-app.use(cors())
-const fs = require('fs');
 var url = require("url");
 var querystring = require('querystring');
 
-let connection;
+//let ipConnect='192.168.0.5';
+//let connectionArray=[];   //[[connection0,socket1,socket2],[connection1,socket1],[connection2,socket3]]
+
+//let connectionJson=[];   //[jsonCon0,jsonCon1,jsonCon2]
+
+let jsonConnection;
+
+/*let json=`{
+  "lampes": [
+    {
+      "status": 0,
+      "lampeId": 1
+    },
+    {
+      "status": 0,
+      "lampeId": 2
+    },
+    {
+      "status": 0,
+      "lampeId": 3
+    },
+    {
+      "status": 0,
+      "lampeId": 4
+    }
+  ]
+}`*/
 
 let chenillard;
 let motifChenillard;
-var lampes=[
-  {
-  lampeID :1,
-  status:"on"
-},
-{
-lampeID :2,
-status:"off"
-},
-{
-lampeID :3,
-status:"off"
-},
-{
-lampeID :4,
-status:"on"
-  }
-];
 
-[{"status":0,"lampeId":"'1'"},{"status":0,"lampeId":"'2'"},{"status":0,"lampeId":"'3'"},{"status":0,"lampeId":"'4'"}]
-app.post('/connect', (req, res) => {
+var cors = require('cors')
+
+ 
+app.use(cors());
+app.post('/connect', function (req, res) {
   let body = '';
-req.on('data', chunk => {
+  req.on('data', chunk => {
     body += chunk.toString();
 });
 req.on('end', () => {
+  let json=JSON.parse(body);
+  console.log('Trying to connect');
 connection = knx.Connection({
-  ipAddr:body,
+  ipAddr: json.data.ip,
   ipPort: 3671,
   // define your event handlers here:
   handlers: {
     connected: function() {
-      console.log('Connected to '+body);
-      msg={"ip":body,"status":true,"lampes":lampes};
-      res.send(JSON.stringify(msg));
-      console.log('message : '+msg);
-      res.end();
+      console.log('Connected!');
       setTimeout(function(){
         connection.write("0/1/1", 1);
         connection.write("0/1/2", 1);
@@ -319,6 +309,8 @@ connection = knx.Connection({
           connection.write("0/1/3", 0);
           connection.write("0/1/4", 0);
           setTimeout(function(){
+            let msg={ip : json.data.ip, check :1};
+            res.send(JSON.stringify(msg));
             chenillard=new Chenillard(['1','2','3','4'],1500);
             motifChenillard=new MotifChenillard([m5,m1,m6,m2,m7,m3,m8,m4],1500);
           },500);
@@ -327,9 +319,9 @@ connection = knx.Connection({
 
     },
     event: function (evt, src, dest, value) {
-      //console.log("%s **** KNX EVENT: %j, src: %j, dest: %j, value: %j",
-      //new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''),
-      //evt, src, dest, value);
+      index=jsonConnection.light.indexOf(dest[dest.length-1]);
+      jsonConnection.state[index]=JSON.parse(JSON.stringify(value)).data[0];
+      console.log(JSON.stringify(jsonConnection));
       switch(dest){
         case '0/3/1': //start/stop chenillard
         switch(activeChenillard){
@@ -412,7 +404,26 @@ connection = knx.Connection({
     }
   }
 });
+
 });
+  /*index=connectionJson.findIndex(function (obj) {return  obj.ip==ipConnect;})
+  if(index==-1){
+    //La connection entre le serveur et le systeme n'est pas établie
+    index=connectionJson.findIndex(function (obj) {return  obj==null})
+    if(index==-1){
+      jsonConnection=JSON.parse("{ \"id\""=+connectionJson.length+",\"ip\"=\""+ipConnect+"\",\"light\": [\"1\",\"2\",\"3\",\"4\"],\"state\": [0,0,0,0]}");
+      connectionJson.push(jsonConnection);
+    }
+    else{
+      jsonConnection=JSON.parse("{ \"id\""=+index+",\"ip\"=\""+ipConnect+"\",\"light\": [\"1\",\"2\",\"3\",\"4\"],\"state\": [0,0,0,0]}");
+      connectionJson[index](jsonConnection);
+    }
+  }
+  else{
+  //La connection entre le serveur et le systeme est établie
+
+  }*/
+  
   
 });
 
@@ -445,6 +456,21 @@ app.get('/stop', (req, res) => {
   chenillard.stop();
   button1State=0;
   res.end();
+});
+
+app.post('/lightState', (req, res) => {
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString();
+});
+
+req.on('end', () => {
+  let json=JSON.parse(body);
+  console.log("Light: "+json.data.lampId+" changed to "+json.data.state);
+  connection.write("0/1/"+json.data.lampId, json.data.state);
+  let msg={ip : json.data.ip,state:json.data.state, check :1};
+  res.send(JSON.stringify(msg));
+  });
 });
 
 app.get('/change', (req, res) => {
@@ -617,9 +643,9 @@ app.get('/connectBoth', (req, res) => {
   let ready1=false;
   let ready2=false;
 
-  let bothChenillard;
+  let bothChenillard =new Chenillard(['1','3','5','7','2','4','6','8'],500);
 
-  let currentLight='8';
+  let currentLight;
 
   let connection0 = knx.Connection({
     ipAddr: '192.168.0.5',
@@ -641,7 +667,7 @@ app.get('/connectBoth', (req, res) => {
             connection0.write("0/1/4", 0);
             setTimeout(function(){
               ready1=true;
-              bothChenillard=startBothChenillard(['1','4','6','7','2','3','5','8'],500);
+              if (ready1&ready2){bothChenillard.start();}
             },500);
           },1000);
         },1500);
@@ -695,7 +721,7 @@ app.get('/connectBoth', (req, res) => {
             connection1.write("0/1/4", 0);
             setTimeout(function(){
               ready2=true;
-              bothChenillard=startBothChenillard(['1','4','6','7','2','3','5','8','9'],500);
+              if (ready1&ready2){bothChenillard.start();}
             },500);
           },1000);
         },1500);
@@ -729,7 +755,7 @@ app.get('/connectBoth', (req, res) => {
     }
   });
 
-  function startBothChenillard(arrayOrder,ms){
+  /*function startBothChenillard(arrayOrder,ms){
     if(ready1&ready2){
       let i=arrayOrder.indexOf(currentBothLight);
       let chenillard=setInterval(function(){
@@ -752,7 +778,7 @@ app.get('/connectBoth', (req, res) => {
     else{ 
       return String(Number(array[index])%4);
     }
-  }
+  }*/
 
   /*function startBothChenillard(arrayOrder,ms){
     if(ready1&ready2){
