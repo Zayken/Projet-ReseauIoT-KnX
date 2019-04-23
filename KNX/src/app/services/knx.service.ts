@@ -9,12 +9,7 @@ import { isComponent } from '@angular/core/src/render3/util';
 })
 export class KNXService {
   appareilSubject = new Subject<any[]>();
-   lampes=[
-     {lampeId:1,status:1},
-     {lampeId:2,status:1},
-     {lampeId:3,status:1},
-     {lampeId:4,status:1},
-    ]
+   lampes;
    IP;
    isConnect:boolean;
    chenillard:boolean;
@@ -29,6 +24,7 @@ export class KNXService {
   {
     
   }
+
   emitAppareilSubject()
   {
     this.appareilSubject.next(this.lampes.slice());
@@ -128,6 +124,7 @@ export class KNXService {
         var json=JSON.parse(res);
         if(json.check==1)
         {
+          this.lampes=json.lampes;
           this.router.navigate(['maquette']);
           this.isConnect=true;
         }

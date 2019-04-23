@@ -24,7 +24,7 @@ export class MaquetteViewComponent implements OnInit {
     this.getSocketData();
     this.chenillard=false;
     }
-
+    
     getSocketData(): void {
       this.sub = this.socketDataService.getSocketData()
         .subscribe(data => {
@@ -32,6 +32,7 @@ export class MaquetteViewComponent implements OnInit {
       })
     }
 
+    
  disconnect()
  {
    var msg={"cmd":"disconnect","data":{"ip":this.IP}};

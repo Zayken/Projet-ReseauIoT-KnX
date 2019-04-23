@@ -1,10 +1,13 @@
 
-      <div>
-         <h2 class="text-center">{{getStatus()}}</h2>
-        <div>
+        <div class="container">
+        <div class="row mx-auto">
+            <div class="row mx-auto">
+                <h2 class="text-center">{{getStatus()}}</h2>
+            </div>
+            <div class="row mx-auto" style="height:200px;">
                 <img [src]="geturl()" width="200px">
             </div>
-                <div>
+            <div class="mx-auto">
                         <button [ngClass]="{
                         'btn btn-circle btn-lg glyphicon glyphicon-off':true,
                         'btn btn-success':lampeStatus==0,
@@ -13,11 +16,12 @@
                         (click)="click()">
                         <i class="icon-play"></i>
                     </button>
-                    </div>
-<div>
-    <p class="text-danger">{{errorMessage }}</p>
-</div>
-     </div>
+            </div>
+            <div>
+                <p class="text-danger">{{errorMessage }}</p>
+            </div>
+
+        </div>
    
                           
  
