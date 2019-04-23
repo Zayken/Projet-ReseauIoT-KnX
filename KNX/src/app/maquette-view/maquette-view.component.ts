@@ -22,13 +22,15 @@ export class MaquetteViewComponent implements OnInit {
     this.lampes=this.knxService.lampes;
     this.getSocketData();
     }
-
+    
     getSocketData(): void {
       this.sub = this.socketDataService.getSocketData()
         .subscribe(data => {
          this.socketData = data
       })
     }
+
+    
  disconnect()
  {
    var msg={"cmd":"disconnect","data":{"ip":this.IP}};

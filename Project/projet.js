@@ -13,9 +13,11 @@ var server = http.createServer(function(req, res) {
 // Chargement de socket.io
 var io = require('socket.io').listen(server);
 
+let socketTab=[];
 // Quand un client se connecte, on le note dans la console
 io.sockets.on('connection', function (socket) {
     console.log('Un client est connecté !');
+    socketTab.push(socket);
 });
 
 
@@ -255,8 +257,7 @@ var querystring = require('querystring');
 
 let jsonConnection;
 
-/*let json=`{
-  "lampes": [
+let lampes=[
     {
       "status": 0,
       "lampeId": 1
@@ -273,8 +274,7 @@ let jsonConnection;
       "status": 0,
       "lampeId": 4
     }
-  ]
-}`*/
+  ];
 
 let chenillard;
 let motifChenillard;
@@ -309,7 +309,7 @@ connection = knx.Connection({
           connection.write("0/1/3", 0);
           connection.write("0/1/4", 0);
           setTimeout(function(){
-            let msg={ip : json.data.ip, check :1};
+            let msg={ip : json.data.ip, lampes:lampes,check :1};
             res.send(JSON.stringify(msg));
             chenillard=new Chenillard(['1','2','3','4'],1500);
             motifChenillard=new MotifChenillard([m5,m1,m6,m2,m7,m3,m8,m4],1500);
@@ -319,9 +319,14 @@ connection = knx.Connection({
 
     },
     event: function (evt, src, dest, value) {
-      index=jsonConnection.light.indexOf(dest[dest.length-1]);
-      jsonConnection.state[index]=JSON.parse(JSON.stringify(value)).data[0];
-      console.log(JSON.stringify(jsonConnection));
+      if(dest.substring(2,3)=='2'){
+        console.log(dest.substring(4,5));
+        console.log(JSON.parse(JSON.stringify(value)).data[0]);
+        let msg={ lampeId:parseInt(dest.substring(4,5)),status:JSON.parse(JSON.stringify(value)).data[0]};
+        socketTab.forEach(function(socket){
+          socket.emit('event',JSON.stringify(msg));
+        })
+      }
       switch(dest){
         case '0/3/1': //start/stop chenillard
         switch(activeChenillard){
@@ -468,7 +473,7 @@ req.on('end', () => {
   let json=JSON.parse(body);
   console.log("Light: "+json.data.lampId+" changed to "+json.data.state);
   connection.write("0/1/"+json.data.lampId, json.data.state);
-  let msg={ip : json.data.ip,state:json.data.state, check :1};
+  let msg={ip : json.data.ip, check :1};
   res.send(JSON.stringify(msg));
   });
 });

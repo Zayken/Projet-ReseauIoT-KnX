@@ -56,7 +56,7 @@ export class TestComponent implements OnInit {
   }
     geturl()
     {
-      if(this.lampeStatus===1)
+      if(this.lampeStatus==1)
       {
         return "assets/light-bulb.png";
       }
