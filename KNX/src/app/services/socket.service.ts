@@ -16,7 +16,7 @@ export class SocketService {
 
     observer
     getSocketData(): Observable<any> {
-        this.socket.on('socket-data', (res) => {
+        this.socket.on('event', (res) => {
             this.observer.next(res);
         });
         return this.getSocketDataObservable();

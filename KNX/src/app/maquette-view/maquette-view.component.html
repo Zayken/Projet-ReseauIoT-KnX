@@ -5,7 +5,10 @@
     [lampeId]="appareil.lampeId"
     [lampeStatus]="appareil.status">
 </app-test>
-<!---<div><button class="btn btn-warning" (click)="startrequete()">Start requete</button></div>-->
+<div> <button [ngClass]="{
+    'btn btn-success':chenillard==false,
+    'btn btn-danger':chenillard==true
+    }" (click)="startchenillard()">{{getChenillard()}}</button></div>
 
 </div>
  

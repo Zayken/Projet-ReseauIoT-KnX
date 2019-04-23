@@ -17,16 +17,17 @@ export class KNXService {
     ]
    IP;
    isConnect:boolean;
+   chenillard:boolean;
    errorMessage:string;
 
 
-  constructor(private httpClient: HttpClient, private router :Router) {   console.log("page raffraichi");
+  constructor(private httpClient: HttpClient, private router :Router) {   
 //requete HTTP pour savoir si la connexion est toujours maintenue
 
 }
   ngOnInit()
   {
-
+    
   }
   emitAppareilSubject()
   {
@@ -58,7 +59,7 @@ export class KNXService {
          var json=JSON.parse(res);
          console.log(JSON.stringify(res));
       if(json.check==1)
-      {console.log("reussi");
+      {console.log("lightstate");
         this.lampes[index].status=json.state;
         this.emitAppareilSubject();        
       }
@@ -100,12 +101,13 @@ export class KNXService {
       (res)=> {
         console.log(JSON.stringify(res));
         var json=JSON.parse(res);
-        if(json.state==1)
+        if(json.check==1)
         {
-       
+      this.chenillard=true;
         }
         else
         {
+          this.chenillard=false
        
         }
       },

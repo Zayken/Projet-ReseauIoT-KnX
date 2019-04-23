@@ -14,6 +14,7 @@ export class MaquetteViewComponent implements OnInit {
  lampes=<any>[];
  sub: Subscription;
  socketData;
+ chenillard:boolean;
  appareilSubscription : Subscription;
   constructor(private socketDataService: SocketService,private httpClient:HttpClient,private knxService:KNXService) {}
 
@@ -21,6 +22,7 @@ export class MaquetteViewComponent implements OnInit {
    this.IP=this.knxService.IP;
     this.lampes=this.knxService.lampes;
     this.getSocketData();
+    this.chenillard=false;
     }
 
     getSocketData(): void {
@@ -29,6 +31,7 @@ export class MaquetteViewComponent implements OnInit {
          this.socketData = data
       })
     }
+
  disconnect()
  {
    var msg={"cmd":"disconnect","data":{"ip":this.IP}};
@@ -38,8 +41,19 @@ startchenillard()
 {
   var msg={"cmd":"start", "data":{ "ip" : this.IP}};
   this.knxService.startChenillard(JSON.stringify(msg));
+  this.chenillard=this.knxService.chenillard;
 }
 
-
+getChenillard()
+{
+  if(this.chenillard==true)
+  {
+    return "Stop chenillard"
+  }
+  else
+  {
+    return "Start chenillard"
+  }
+}
 
 }
