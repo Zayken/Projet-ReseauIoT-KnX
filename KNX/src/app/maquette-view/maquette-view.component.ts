@@ -45,7 +45,7 @@ export class MaquetteViewComponent implements OnInit {
       var speed = this.speedForm.get('initspeed').value;
       console.log("speed : "+speed);
       var msg={"cmd":"setSpeed", "data":{ "ip" : this.IP, "speed":speed}};
-      this.knxService.ConnectToMaquette(JSON.stringify(msg));
+      this.knxService.setSpeed(JSON.stringify(msg));
    }
 
     increase()

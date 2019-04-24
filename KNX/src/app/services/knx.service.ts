@@ -158,6 +158,26 @@ export class KNXService {
       }
     )
   }
+  setSpeed(data:string)
+  {
+   this.httpClient.post("http://localhost:3000/setSpeed",data,{responseType: 'text'})
+   .subscribe(
+      (res)=> {
+        var json=JSON.parse(res);
+        console.log(JSON.stringify(res));
+     if(json.state==1)
+     {
+    
+     }
+    
+      },
+      (error)=>{
+
+  console.log("erreur de suavegarde"+ error.message);
+  this.errorMessage=error.message;
+      }
+    )
+  }
   decrease(data:string)
   {
    this.httpClient.post("http://localhost:3000/decrease",data,{responseType: 'text'})
