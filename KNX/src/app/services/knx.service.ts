@@ -10,19 +10,19 @@ import { isComponent } from '@angular/core/src/render3/util';
 export class KNXService {
   appareilSubject = new Subject<any[]>();
    lampes;
+
    IP;
    isConnect:boolean;
-   chenillard:boolean;
    errorMessage:string;
 
 
-  constructor(private httpClient: HttpClient, private router :Router) {   
+  constructor(private httpClient: HttpClient, private router :Router) {      
+
 //requete HTTP pour savoir si la connexion est toujours maintenue
 
 }
   ngOnInit()
   {
-    
   }
 
   emitAppareilSubject()
@@ -76,7 +76,6 @@ export class KNXService {
   }
 
 
-
     getAppareilById(id : number)
     {
       const appareil=this.lampes.find(
@@ -89,31 +88,7 @@ export class KNXService {
   
   
     
- startChenillard(data:string)
- {
-
- this.httpClient.post("http://localhost:3000/start",data,{responseType: 'text'})
-   .subscribe(
-      (res)=> {
-        console.log(JSON.stringify(res));
-        var json=JSON.parse(res);
-        if(json.check==1)
-        {
-      this.chenillard=true;
-        }
-        else
-        {
-          this.chenillard=false
-       
-        }
-      },
-      (error)=>{
-
-  console.log("erreur de suavegarde"+ error.message);
-  this.errorMessage=error.message;
-      }
-    )
-  }
+ 
 
   ConnectToMaquette(data:string)
   {
@@ -163,6 +138,45 @@ export class KNXService {
       }
     )
   }
-  
+  increase(data:string)
+  {
+   this.httpClient.post("http://localhost:3000/increase",data,{responseType: 'text'})
+   .subscribe(
+      (res)=> {
+        var json=JSON.parse(res);
+        console.log(JSON.stringify(res));
+     if(json.state==1)
+     {
+    
+     }
+    
+      },
+      (error)=>{
+
+  console.log("erreur de suavegarde"+ error.message);
+  this.errorMessage=error.message;
+      }
+    )
+  }
+  decrease(data:string)
+  {
+   this.httpClient.post("http://localhost:3000/decrease",data,{responseType: 'text'})
+   .subscribe(
+      (res)=> {
+        var json=JSON.parse(res);
+        console.log(JSON.stringify(res));
+     if(json.state==1)
+     {
+    
+     }
+    
+      },
+      (error)=>{
+
+  console.log("erreur de suavegarde"+ error.message);
+  this.errorMessage=error.message;
+      }
+    )
+  }
   }
 

@@ -16,7 +16,7 @@ import { MaquetteViewComponent } from './maquette-view/maquette-view.component';
 import { ConnectGuardService } from './connect-guard.service';
 import { TestComponent } from './test/test.component';
 import { SocketService } from './services/socket.service';
-
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 const appRoutes: Routes = [
   { path: 'auth/signup', component: SignupComponent },
   { path: 'auth/signin', component: SigninComponent },
@@ -41,6 +41,7 @@ const appRoutes: Routes = [
   imports: [
     BrowserModule,
     FormsModule,
+    NgbModule,
     ReactiveFormsModule,
     HttpClientModule,
     RouterModule.forRoot(appRoutes)

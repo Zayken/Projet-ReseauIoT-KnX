@@ -18,7 +18,6 @@ export class SocketService {
     observer
     getSocketData(): Observable<any> {
         this.socket.on('event', (res) => {
-            console.log(res.toString());
             this.observer.next(res);
             let json = JSON.parse(res);
             this.knxService.lampes[json.lampeId-1]=json;

@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs';
 import { KNXService } from '../services/knx.service';
 import { HttpClient } from '@angular/common/http';
 import { SocketService } from '../services/socket.service';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-maquette-view',
@@ -14,15 +15,24 @@ export class MaquetteViewComponent implements OnInit {
  lampes=<any>[];
  sub: Subscription;
  socketData;
- chenillard:boolean;
+ speedForm: FormGroup;
+
+ isChenillard:boolean;
  appareilSubscription : Subscription;
-  constructor(private socketDataService: SocketService,private httpClient:HttpClient,private knxService:KNXService) {}
+  constructor(private formBuilder: FormBuilder,private socketDataService: SocketService,private httpClient:HttpClient,private knxService:KNXService) {}
 
   ngOnInit() {
    this.IP=this.knxService.IP;
     this.lampes=this.knxService.lampes;
     this.getSocketData();
-    this.chenillard=false;
+    this.initForm();
+    this.isChenillard=false;
+    }
+
+    initForm() {
+      this.speedForm = this.formBuilder.group({
+        initspeed: ['speed', [Validators.required]],
+      });
     }
     
     getSocketData(): void {
@@ -31,29 +41,79 @@ export class MaquetteViewComponent implements OnInit {
          this.socketData = data
       })
     }
+    onSubmit() {
+      var speed = this.speedForm.get('initspeed').value;
+      console.log("speed : "+speed);
+      var msg={"cmd":"setSpeed", "data":{ "ip" : this.IP, "speed":speed}};
+      this.knxService.ConnectToMaquette(JSON.stringify(msg));
+   }
 
-    
+    increase()
+    {
+      console.log("j'increase");
+      var msg={"cmd":"increase", "data":{ "ip" : this.IP, "speed":150}};
+
+      this.knxService.increase(JSON.stringify(msg));
+    }
+    decrease()
+    {
+      console.log("je decrease");
+
+      var msg={"cmd":"decrease", "data":{ "ip" : this.IP, "speed":150}};
+
+      this.knxService.decrease(JSON.stringify(msg));
+    }
+   
  disconnect()
  {
    var msg={"cmd":"disconnect","data":{"ip":this.IP}};
   this.knxService.DisconnectFromMaquette(JSON.stringify(msg));
  }
-startchenillard()
+chenillard()
 {
-  var msg={"cmd":"start", "data":{ "ip" : this.IP}};
-  this.knxService.startChenillard(JSON.stringify(msg));
-  this.chenillard=this.knxService.chenillard;
+  if(this.isChenillard==false)
+  {
+    var msg={"cmd":"start", "data":{ "ip" : this.IP}};
+
+  }
+  else if(this.isChenillard==true)
+  {
+  var msg={"cmd":"stop", "data":{ "ip" : this.IP}};
+  }
+
+ 
+  this.httpClient.post("http://localhost:3000/chenillard",msg,{responseType: 'text'})
+    .subscribe(
+       (res)=> {
+         console.log(JSON.stringify(res));
+         var json=JSON.parse(res);
+         if(json.check==1&&json.cmd=="start")
+         {
+       this.isChenillard=true;
+       console.log("je veux allumer le chenillard");
+         }
+         else if(json.check==1&&json.cmd=="stop")
+         {
+           this.isChenillard=false;
+           console.log("je veux eteindre le chenillard"); 
+         }
+       },
+       (error)=>{
+ 
+       }
+     )
+   console.log("statut : "+this.isChenillard);
 }
 
 getChenillard()
 {
-  if(this.chenillard==true)
+  if(this.isChenillard==true)
   {
-    return "Stop chenillard"
+    return "Stop chenillard";
   }
-  else
+  else if(this.isChenillard==false)
   {
-    return "Start chenillard"
+    return "Start chenillard";
   }
 }
 
