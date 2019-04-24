@@ -9,11 +9,12 @@
 
 <div>
      <button [ngClass]="{
-    'btn btn-success':isChenillard==false,
-    'btn btn-danger':isChenillard==true
+         'mt-3':true,
+    'btn btn-success ':isChenillard==false,
+    'btn btn-danger' :isChenillard==true
     }" (click)="chenillard()">{{getChenillard()}}</button>
-<div><button class="btn btn-outline-success"(click)="increase()"> increase</button>
- <button class="btn btn-outline-danger" (click)="decrease()"> decrease</button></div>
+<div><button class="btn btn-outline-success mt-2 mr-2"(click)="increase()"> increase</button>
+ <button class="btn btn-outline-danger mt-2" (click)="decrease()"> decrease</button></div>
 </div>
 
    
