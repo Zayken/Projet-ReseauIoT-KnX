@@ -55,9 +55,7 @@ export class KNXService {
          var json=JSON.parse(res);
          console.log(JSON.stringify(res));
       if(json.check==1)
-      {console.log("lightstate");
-        this.lampes[index].status=json.state;
-        this.emitAppareilSubject();        
+      {console.log("lightstate");       
       }
       else
         {
@@ -99,6 +97,8 @@ export class KNXService {
         var json=JSON.parse(res);
         if(json.check==1)
         {
+          this.IP=JSON.parse(data).data.ip;
+          console.log(this.IP);
           this.lampes=json.lampes;
           this.router.navigate(['maquette']);
           this.isConnect=true;
@@ -198,5 +198,27 @@ export class KNXService {
       }
     )
   }
+
+  setOrder(data:string)
+  {
+   this.httpClient.post("http://localhost:3000/setOrder",data,{responseType: 'text'})
+   .subscribe(
+      (res)=> {
+        var json=JSON.parse(res);
+        console.log(JSON.stringify(res));
+     if(json.state==1)
+     {
+    
+     }
+    
+      },
+      (error)=>{
+
+  console.log("erreur de suavegarde"+ error.message);
+  this.errorMessage=error.message;
+      }
+    )
+  }
+
   }
 

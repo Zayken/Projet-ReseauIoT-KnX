@@ -30,47 +30,61 @@ class Chenillard {
   constructor(arrayOrder,ms){
     this.arrayOrder=arrayOrder;
     this.ms=ms;
+    this.state=false;
   }
 
   start(){
     console.log('Start');
     this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    this.state=true;
   }
 
   stop(){
     console.log('Stop');
     chenillardOff(this.chenillard);
+    this.state=false;
   }
 
   loadMs(ms){
     chenillardOff(this.chenillard);
     this.ms=checkMs(ms);
-    this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    if(this.state){
+      this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    }
   }
 
   increaseMs(ms){
     chenillardOff(this.chenillard);
     this.ms=checkMs(this.ms+ms);
-    this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    if(this.state){
+      this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    }
+    
   }
 
   decreaseMs(ms){
     chenillardOff(this.chenillard);
     this.ms=checkMs(this.ms-ms);
-    this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    if(this.state){
+      this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    }
   }
 
   loadOrder(arrayOrder){
     chenillardOff(this.chenillard);
     this.arrayOrder=arrayOrder;
-    this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    if(this.state){
+      this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    }
   }
 
   loadBoth(arrayOrder,ms){
     chenillardOff(this.chenillard);
     this.ms=checkMs(ms);
     this.arrayOrder=arrayOrder;
-    this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    if(this.state){
+      this.chenillard=chenillardOn(this.arrayOrder,this.ms);
+    }
   }
 }
 
@@ -81,6 +95,10 @@ function chenillardOn(arrayOrder,ms){
   else{
     if(currentLight==undefined){currentLight=arrayOrder[arrayOrder.length-1];}
     let i=arrayOrder.indexOf(currentLight);
+    if(i==-1){
+      currentLight=arrayOrder[0];
+      i=arrayOrder.indexOf(currentLight);
+    }
     let chenillard=setInterval(function(){
       if (i==arrayOrder.length){i=0;}
       console.log('connection'+Math.trunc((Number(arrayOrder[i])-1)/4),convert(arrayOrder,i), arrayOrder[i]);
@@ -281,6 +299,7 @@ let lampes=[
 
 let chenillard;
 let motifChenillard;
+let connection0;
 
 var cors = require('cors')
 
@@ -294,7 +313,8 @@ app.post('/connect', function (req, res) {
 req.on('end', () => {
   let json=JSON.parse(body);
   console.log('Trying to connect');
-
+  let msg={ip : json.data.ip, lampes:lampes,check :1};
+  res.send(JSON.stringify(msg));
   /**let jsonConnection;
   index=connectionJson.findIndex(function (obj){ return obj.ip==json.data.ip});
   if(index==-1){//Connection existe pas
@@ -329,7 +349,7 @@ req.on('end', () => {
 
 
 
-let connection0 = knx.Connection({
+/*connection0 = knx.Connection({
   ipAddr: json.data.ip,
   ipPort: 3671,
   // define your event handlers here:
@@ -358,15 +378,19 @@ let connection0 = knx.Connection({
     },
     event: function (evt, src, dest, value) {
       if(dest.substring(2,3)=='2'){
-        console.log(dest.substring(4,5));
-        console.log(JSON.parse(JSON.stringify(value)).data[0]);
-        let msg={ ip:ipAddr,lampeId:parseInt(dest.substring(4,5)),status:JSON.parse(JSON.stringify(value)).data[0]};
+        console.log('light'+dest.substring(4,5));
+        console.log('state'+JSON.parse(JSON.stringify(value)).data[0]);
+        console.log(json.data.ip);
+        //let tab={lampeId:parseInt(dest.substring(4,5)),status:JSON.parse(JSON.stringify(value)).data[0]};
+        let msg={ip:json.data.ip,lampeId:parseInt(dest.substring(4,5)),status:JSON.parse(JSON.stringify(value)).data[0]};
         socketTab.forEach(function(socket){
+          console.log('emit');
           socket.emit('event',JSON.stringify(msg));
         })
       }
       switch(dest){
         case '0/3/1': //start/stop chenillard
+        console.log('b1');
         switch(activeChenillard){
           case 'normal' :
             switch(button1State){
@@ -396,6 +420,7 @@ let connection0 = knx.Connection({
         break;
 
         case '0/3/2':   //change chennilard order
+        console.log('b2');
         switch (activeChenillard){
           case 'normal':
           switch(button2State){
@@ -419,6 +444,7 @@ let connection0 = knx.Connection({
         break;
 
         case '0/3/3':     //decrease speed
+        console.log('b3');
         switch (activeChenillard){
           case 'normal':
             chenillard.increaseMs(250);
@@ -430,6 +456,7 @@ let connection0 = knx.Connection({
         break;
 
         case '0/3/4':     //increase speed
+        console.log('b4');
         switch (activeChenillard){
           case 'normal':
             chenillard.decreaseMs(250);
@@ -446,7 +473,7 @@ let connection0 = knx.Connection({
       console.log("**** ERROR: %j", connstatus);
     }
   }
-});
+});*/
 
 });
   /*index=connectionJson.findIndex(function (obj) {return  obj.ip==ipConnect;})
@@ -488,7 +515,7 @@ app.get('/reset', (req, res) => {
 //  Simple chenillard //
 ////////////////////////
 
-app.post('/start', (req, res) => {
+app.post('/chenillard', (req, res) => {
   let body = '';
 req.on('data', chunk => {
     body += chunk.toString();
@@ -497,19 +524,22 @@ req.on('data', chunk => {
 
 req.on('end', () => {
   let json=JSON.parse(body);
-  activeChenillard='normal';
-  chenillard.start();
-  button1State=1;
-  res.end();
+  if(json.cmd=="start"){
+    activeChenillard='normal';
+    chenillard.start();
+    button1State=1;
+    let msg={cmd:"start",ip : json.data.ip, check :1};
+    res.send(JSON.stringify(msg));
+  }
+  else if (json.cmd=="stop"){
+    chenillard.stop();
+    button1State=0;
+    let msg={cmd:"stop",ip : json.data.ip, check :1};
+    res.send(JSON.stringify(msg));
+  }
+});
 });
 
-});
-
-app.get('/stop', (req, res) => {
-  chenillard.stop();
-  button1State=0;
-  res.end();
-});
 
 app.post('/lightState', (req, res) => {
   let body = '';
@@ -544,12 +574,25 @@ app.get('/change', (req, res) => {
   res.end();
 });
 
-app.get('/decrease', (req, res) => {
+app.post('/decrease', (req, res) => {
 
   //  /decrease ==> default value =250 ms
   //  /decrease?speed=X ==> value =X ms
 
-  var params = querystring.parse(url.parse(req.url).query);
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString();
+});
+
+req.on('end', () => {
+  let json=JSON.parse(body);
+  console.log(" Speed decreseaded by"+json.data.speed);
+  chenillard.increaseMs(json.data.speed);
+  let msg={ip : json.data.ip, check :1};
+  res.send(JSON.stringify(msg));
+  });
+
+  /**var params = querystring.parse(url.parse(req.url).query);
   if ('speed' in params){
     chenillard.increaseMs(params['speed']);
     console.log('decreased by '+params['speed']);
@@ -558,15 +601,28 @@ app.get('/decrease', (req, res) => {
     chenillard.increaseMs(250);
     console.log('decreased by 250');
   }
-  res.end();
+  res.end();*/
 });
 
-app.get('/increase', (req, res) => {
+app.post('/increase', (req, res) => {
 
   //  /increase ==> default value =250 ms
   //  /increase?speed=X ==> value =X ms
 
-  var params = querystring.parse(url.parse(req.url).query);
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString();
+});
+
+req.on('end', () => {
+  let json=JSON.parse(body);
+  console.log(" Speed increseaded by"+json.data.speed);
+  chenillard.decreaseMs(json.data.speed);
+  let msg={ip : json.data.ip, check :1};
+  res.send(JSON.stringify(msg));
+  });
+
+  /**var params = querystring.parse(url.parse(req.url).query);
   if ('speed' in params){
     chenillard.decreaseMs(params['speed']);
     console.log('increased by '+params['speed']);
@@ -575,15 +631,28 @@ app.get('/increase', (req, res) => {
     chenillard.decreaseMs(250);
     console.log('increased by 250');
   }
-  res.end();
+  res.end();*/
 });
 
-app.get('/setSpeed', (req, res) => {
+app.post('/setSpeed', (req, res) => {
 
   //  /setSpeed ==> default value =250 ms
   //  /setSpeed?speed=X ==> value =X ms
 
-  var params = querystring.parse(url.parse(req.url).query);
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString();
+});
+
+req.on('end', () => {
+  let json=JSON.parse(body);
+  console.log(" Speed increseaded by"+json.data.speed);
+  chenillard.loadMs(json.data.speed);
+  let msg={ip : json.data.ip, check :1};
+  res.send(JSON.stringify(msg));
+  });
+
+  /*var params = querystring.parse(url.parse(req.url).query);
   if ('speed' in params){
     chenillard.loadMs(params['speed']);
     console.log('set to '+params['speed']);
@@ -592,10 +661,10 @@ app.get('/setSpeed', (req, res) => {
     chenillard.loadMs(1000);
     console.log('set to 1000');
   }
-  res.end();
+  res.end();*/
 });
 
-app.get('/setOrder', (req, res) => {
+app.post('/setOrder', (req, res) => {
 
   //  /setOrder?order=['4','1','3','2']
 
@@ -604,8 +673,20 @@ app.get('/setOrder', (req, res) => {
       //  array2=['4','3','2','1'];
       //  array3=['1','3','2','4'];
       //  array4='random';
-
-  try{
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+    });
+    
+    req.on('end', () => {
+      let json=JSON.parse(body);
+      console.log(" Order changed to "+json.data.order);
+      chenillard.loadOrder(json.data.order);
+      let msg={ip : json.data.ip, check :1};
+      res.send(JSON.stringify(msg));
+      });
+      
+  /*try{
     var params = querystring.parse(url.parse(req.url).query);
     if ('order' in params){
       chenillard.loadOrder(eval(params['order']));
@@ -620,7 +701,7 @@ app.get('/setOrder', (req, res) => {
       console.log('order set to '+params['order']);
     }
     res.end();
-  }
+  }*/
 });
 
 /////////////////////////

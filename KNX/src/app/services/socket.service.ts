@@ -20,7 +20,11 @@ export class SocketService {
         this.socket.on('event', (res) => {
             this.observer.next(res);
             let json = JSON.parse(res);
-            this.knxService.lampes[json.lampeId-1]=json;
+            console.log(json);
+            let tmp={lampeId:json.lampeId,status:json.status};
+            if(json.ip==this.knxService.IP){
+                this.knxService.lampes[json.lampeId-1]=tmp;
+            }
         });
         return this.getSocketDataObservable();
     }

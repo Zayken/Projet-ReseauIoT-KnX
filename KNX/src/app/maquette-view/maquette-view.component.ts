@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { KNXService } from '../services/knx.service';
 import { HttpClient } from '@angular/common/http';
@@ -16,6 +16,10 @@ export class MaquetteViewComponent implements OnInit {
  sub: Subscription;
  socketData;
  speedForm: FormGroup;
+ @ViewChild('order1') order1: ElementRef;
+ @ViewChild('order2') order2: ElementRef;
+ @ViewChild('order3') order3: ElementRef;
+ @ViewChild('order4') order4: ElementRef;
 
  isChenillard:boolean;
  appareilSubscription : Subscription;
@@ -62,6 +66,14 @@ export class MaquetteViewComponent implements OnInit {
       var msg={"cmd":"decrease", "data":{ "ip" : this.IP, "speed":150}};
 
       this.knxService.decrease(JSON.stringify(msg));
+    }
+    setOrder()
+    {
+      console.log("change ordre");
+      let tab=[this.order1.nativeElement.value,this.order2.nativeElement.value,this.order3.nativeElement.value,this.order4.nativeElement.value]
+      var msg={"cmd":"changeOrder", "data":{ "ip" : this.IP, "order":tab}};
+
+      this.knxService.setOrder(JSON.stringify(msg));
     }
    
  disconnect()
