@@ -14,12 +14,15 @@ var server = http.createServer(function(req, res) {
 var io = require('socket.io').listen(server);
 
 let socketTab=[];
+let connectionArray=[];
+let connectionSockets=[];
+let connectionJson=[];
+
 // Quand un client se connecte, on le note dans la console
 io.sockets.on('connection', function (socket) {
     console.log('Un client est connecté !');
     socketTab.push(socket);
 });
-
 
 server.listen(8080);
 class Chenillard {
@@ -291,7 +294,42 @@ app.post('/connect', function (req, res) {
 req.on('end', () => {
   let json=JSON.parse(body);
   console.log('Trying to connect');
-connection = knx.Connection({
+
+  /**let jsonConnection;
+  index=connectionJson.findIndex(function (obj){ return obj.ip==json.data.ip});
+  if(index==-1){//Connection existe pas
+      index=connectionJson.findIndex(function (obj){ return obj.ip==null});
+      if(index==-1){
+          jsonConnection=JSON.parse("{ \"id\":"+connectionJson.length+",\"ip\":\""+json.data.ip+"\",\"light\": [\"1\",\"2\",\"3\",\"4\"],\"state\": [0,0,0,0]}");
+          connectionJson.push(jsonConnection);
+          connectionArray.push("connection"+connectionArray.length);
+          connectionSockets.push([s])
+      }
+      else{
+          jsonConnection=JSON.parse("{ \"id\":"+index+",\"ip\":\""+json.data.ip+"\",\"light\": [\"1\",\"2\",\"3\",\"4\"],\"state\": [0,0,0,0]}");
+          connectionJson[index]=jsonConnection;
+          connectionArray[index]=("connection"+index);
+          connectionSockets[index].push(s);
+      }
+  }
+  else{//Connection existe
+      let index1=connectionSockets[index].findIndex(function (obj){ return obj==s});
+      if(index1!=-1){
+          //already connected 
+      }
+      else{
+          //not already connected
+          connectionSockets[index].push(s);
+      }
+      
+  }
+  console.log(connectionArray);
+  console.log(connectionJson);
+  console.log(connectionSockets);**/
+
+
+
+let connection0 = knx.Connection({
   ipAddr: json.data.ip,
   ipPort: 3671,
   // define your event handlers here:
@@ -299,15 +337,15 @@ connection = knx.Connection({
     connected: function() {
       console.log('Connected!');
       setTimeout(function(){
-        connection.write("0/1/1", 1);
-        connection.write("0/1/2", 1);
-        connection.write("0/1/3", 1);
-        connection.write("0/1/4", 1);
+        connection0.write("0/1/1", 1);
+        connection0.write("0/1/2", 1);
+        connection0.write("0/1/3", 1);
+        connection0.write("0/1/4", 1);
         setTimeout(function(){
-          connection.write("0/1/1", 0);
-          connection.write("0/1/2", 0);
-          connection.write("0/1/3", 0);
-          connection.write("0/1/4", 0);
+          connection0.write("0/1/1", 0);
+          connection0.write("0/1/2", 0);
+          connection0.write("0/1/3", 0);
+          connection0.write("0/1/4", 0);
           setTimeout(function(){
             let msg={ip : json.data.ip, lampes:lampes,check :1};
             res.send(JSON.stringify(msg));
@@ -322,7 +360,7 @@ connection = knx.Connection({
       if(dest.substring(2,3)=='2'){
         console.log(dest.substring(4,5));
         console.log(JSON.parse(JSON.stringify(value)).data[0]);
-        let msg={ lampeId:parseInt(dest.substring(4,5)),status:JSON.parse(JSON.stringify(value)).data[0]};
+        let msg={ ip:ipAddr,lampeId:parseInt(dest.substring(4,5)),status:JSON.parse(JSON.stringify(value)).data[0]};
         socketTab.forEach(function(socket){
           socket.emit('event',JSON.stringify(msg));
         })
@@ -433,16 +471,16 @@ connection = knx.Connection({
 });
 
 app.get('/disconnect', (req, res) => {
-  connection.Disconnect();
+  connection0.Disconnect();
   console.log('Disconnected');
   res.end();
 });
 
 app.get('/reset', (req, res) => {
-    connection.write("0/1/1", 0);
-    connection.write("0/1/2", 0);
-    connection.write("0/1/3", 0);
-    connection.write("0/1/4", 0);
+    connection0.write("0/1/1", 0);
+    connection0.write("0/1/2", 0);
+    connection0.write("0/1/3", 0);
+    connection0.write("0/1/4", 0);
     res.end();
 });
 
@@ -450,11 +488,21 @@ app.get('/reset', (req, res) => {
 //  Simple chenillard //
 ////////////////////////
 
-app.get('/start', (req, res) => {
+app.post('/start', (req, res) => {
+  let body = '';
+req.on('data', chunk => {
+    body += chunk.toString();
+    console.log(body);
+});
+
+req.on('end', () => {
+  let json=JSON.parse(body);
   activeChenillard='normal';
   chenillard.start();
   button1State=1;
   res.end();
+});
+
 });
 
 app.get('/stop', (req, res) => {
@@ -472,7 +520,7 @@ app.post('/lightState', (req, res) => {
 req.on('end', () => {
   let json=JSON.parse(body);
   console.log("Light: "+json.data.lampId+" changed to "+json.data.state);
-  connection.write("0/1/"+json.data.lampId, json.data.state);
+  connection0.write("0/1/"+json.data.lampId, json.data.state);
   let msg={ip : json.data.ip, check :1};
   res.send(JSON.stringify(msg));
   });
