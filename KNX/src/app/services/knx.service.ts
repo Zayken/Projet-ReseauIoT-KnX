@@ -10,7 +10,7 @@ import { isComponent } from '@angular/core/src/render3/util';
 export class KNXService {
   appareilSubject = new Subject<any[]>();
    lampes;
-
+   isStarted=false;
    IP;
    isConnect:boolean;
    errorMessage:string;

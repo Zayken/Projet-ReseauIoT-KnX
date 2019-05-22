@@ -4,6 +4,7 @@ import { KNXService } from '../services/knx.service';
 import { HttpClient } from '@angular/common/http';
 import { SocketService } from '../services/socket.service';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-maquette-view',
@@ -22,8 +23,20 @@ export class MaquetteViewComponent implements OnInit {
  @ViewChild('order4') order4: ElementRef;
 
  isChenillard:boolean;
+ subscription: Subscription;
  appareilSubscription : Subscription;
-  constructor(private formBuilder: FormBuilder,private socketDataService: SocketService,private httpClient:HttpClient,private knxService:KNXService) {}
+  constructor(private formBuilder: FormBuilder,private socketDataService: SocketService,private httpClient:HttpClient,private knxService:KNXService, private router:Router) {
+    this.subscription = socketDataService.isStartedObservable.subscribe(
+      data => {
+        console.log(data);
+        if(data=='true'){
+          this.isChenillard=true;
+        }
+        else if (data=='false'){
+          this.isChenillard=false;
+        }
+      });
+  }
 
   ngOnInit() {
    this.IP=this.knxService.IP;
@@ -81,6 +94,7 @@ export class MaquetteViewComponent implements OnInit {
    var msg={"cmd":"disconnect","data":{"ip":this.IP}};
   this.knxService.DisconnectFromMaquette(JSON.stringify(msg));
  }
+
 chenillard()
 {
   if(this.isChenillard==false)
